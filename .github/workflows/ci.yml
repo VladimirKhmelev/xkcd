@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build images
+        run: docker compose build
+
+      - name: Start services
+        run: docker compose up -d api words update search postgres nats
+
+      - name: Wait for API to be ready
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:28080/api/ping && break
+            echo "Waiting for API... ($i)"
+            sleep 5
+          done
+
+      - name: Run smoke tests
+        run: |
+          docker compose run --rm --entrypoint="" tests go test -v -timeout 60s \
+            -run "TestPreflight|TestPing|TestPingAllServices|TestBadLogin|TestBadPassword|TestGoodLogin|TestUpdateDbNoToken|TestDropDbNoToken|TestUpdateRequiresAuth|TestStatsPublic|TestSearchNoPhrase|TestSearchBadLimitMinus|TestSearchBadLimitAlpha" \
+            ./...
+
+      - name: Collect logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v
