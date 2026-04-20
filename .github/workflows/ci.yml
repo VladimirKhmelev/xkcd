@@ -25,11 +25,8 @@ jobs:
             sleep 5
           done
 
-      - name: Run smoke tests
-        run: |
-          docker compose run --rm --entrypoint="" tests go test -v -timeout 60s \
-            -run "TestPreflight|TestPing|TestPingAllServices|TestBadLogin|TestBadPassword|TestGoodLogin|TestUpdateDbNoToken|TestDropDbNoToken|TestUpdateRequiresAuth|TestStatsPublic|TestSearchNoPhrase|TestSearchBadLimitMinus|TestSearchBadLimitAlpha" \
-            ./...
+      - name: Run tests
+        run: docker compose run --rm tests
 
       - name: Collect logs on failure
         if: failure()
