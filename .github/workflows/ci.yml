@@ -35,3 +35,22 @@ jobs:
       - name: Stop services
         if: always()
         run: docker compose down -v
+
+  unit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: search-services/go.mod
+
+      - name: Run unit tests
+        run: make unit
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: cover.html

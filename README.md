@@ -41,12 +41,15 @@ API доступен по адресу `http://localhost:28080`. Полный с
 ## Запуск тестов
 
 ```bash
-# Быстрые smoke-тесты (без побочных эффектов)
-docker compose run --rm tests go test -v -run "TestPreflight|TestPing|TestPingAllServices" ./...
+# Интеграционные тесты (поднимает все сервисы)
+docker-compose run --rm tests
 
-# Полный интеграционный прогон
-docker compose run --rm tests go test -v -timeout 30m ./...
+# Юнит-тесты + отчёт о покрытии
+make unit
+xdg-open cover.html
 ```
+
+Отчёт о покрытии также генерируется автоматически в CI и доступен во вкладке **Actions → джоб unit → Artifacts → coverage-report**.
 
 ## Мониторинг
 

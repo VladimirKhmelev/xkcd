@@ -22,6 +22,10 @@ test:
 	make clean
 	@echo "test finished"
 
+unit:
+	make -C search-services test
+	mv search-services/cover.html .
+
 lint:
 	make -C search-services lint
 
