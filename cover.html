@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">yadro.com/course/api/adapters/aaa/auth.go (0.0%)</option>
+				<option value="file0">yadro.com/course/api/adapters/aaa/auth.go (96.2%)</option>
 				
 				<option value="file1">yadro.com/course/api/adapters/rest/api.go (0.0%)</option>
 				
@@ -149,57 +149,57 @@ type AAA struct {
         log      *slog.Logger
 }
 
-func New(tokenTTL time.Duration, log *slog.Logger) (AAA, error) <span class="cov0" title="0">{
+func New(tokenTTL time.Duration, log *slog.Logger) (AAA, error) <span class="cov10" title="10">{
         const adminUser = "ADMIN_USER"
         const adminPass = "ADMIN_PASSWORD"
         user, ok := os.LookupEnv(adminUser)
-        if !ok </span><span class="cov0" title="0">{
+        if !ok </span><span class="cov1" title="1">{
                 return AAA{}, fmt.Errorf("could not get admin user from enviroment")
         }</span>
-        <span class="cov0" title="0">password, ok := os.LookupEnv(adminPass)
-        if !ok </span><span class="cov0" title="0">{
+        <span class="cov9" title="9">password, ok := os.LookupEnv(adminPass)
+        if !ok </span><span class="cov1" title="1">{
                 return AAA{}, fmt.Errorf("could not get admin password from enviroment")
         }</span>
 
-        <span class="cov0" title="0">return AAA{
+        <span class="cov9" title="8">return AAA{
                 users:    map[string]string{user: password},
                 tokenTTL: tokenTTL,
                 log:      log,
         }, nil</span>
 }
 
-func (a AAA) Login(name, password string) (string, error) <span class="cov0" title="0">{
+func (a AAA) Login(name, password string) (string, error) <span class="cov7" title="5">{
         expectedPass, ok := a.users[name]
-        if !ok || expectedPass != password </span><span class="cov0" title="0">{
+        if !ok || expectedPass != password </span><span class="cov3" title="2">{
                 return "", fmt.Errorf("invalid credentials")
         }</span>
 
-        <span class="cov0" title="0">token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+        <span class="cov5" title="3">token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
                 Subject:   adminRole,
                 ExpiresAt: jwt.NewNumericDate(time.Now().Add(a.tokenTTL)),
         })
         return token.SignedString([]byte(secretKey))</span>
 }
 
-func (a AAA) Verify(tokenString string) error <span class="cov0" title="0">{
-        token, err := jwt.ParseWithClaims(tokenString, &amp;jwt.RegisteredClaims{}, func(t *jwt.Token) (any, error) </span><span class="cov0" title="0">{
-                if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok </span><span class="cov0" title="0">{
+func (a AAA) Verify(tokenString string) error <span class="cov7" title="5">{
+        token, err := jwt.ParseWithClaims(tokenString, &amp;jwt.RegisteredClaims{}, func(t *jwt.Token) (any, error) </span><span class="cov6" title="4">{
+                if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok </span><span class="cov1" title="1">{
                         return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
                 }</span>
-                <span class="cov0" title="0">return []byte(secretKey), nil</span>
+                <span class="cov5" title="3">return []byte(secretKey), nil</span>
         })
-        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+        <span class="cov7" title="5">if err != nil </span><span class="cov5" title="3">{
                 return fmt.Errorf("invalid token: %w", err)
         }</span>
 
-        <span class="cov0" title="0">claims, ok := token.Claims.(*jwt.RegisteredClaims)
+        <span class="cov3" title="2">claims, ok := token.Claims.(*jwt.RegisteredClaims)
         if !ok || !token.Valid </span><span class="cov0" title="0">{
                 return fmt.Errorf("invalid token claims")
         }</span>
-        <span class="cov0" title="0">if claims.Subject != adminRole </span><span class="cov0" title="0">{
+        <span class="cov3" title="2">if claims.Subject != adminRole </span><span class="cov1" title="1">{
                 return fmt.Errorf("insufficient permissions")
         }</span>
-        <span class="cov0" title="0">return nil</span>
+        <span class="cov1" title="1">return nil</span>
 }
 </pre>
 		
