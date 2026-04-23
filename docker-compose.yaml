@@ -1,5 +1,23 @@
 services:
 
+  frontend:
+    image: frontend:latest
+    build:
+      context: search-services
+      dockerfile: Dockerfile.frontend
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - 28090:8080
+    volumes:
+      - ./search-services/frontend/config.yaml:/config.yaml
+    environment:
+      - LOG_LEVEL=DEBUG
+      - FRONTEND_ADDRESS=:8080
+      - API_ADDRESS=http://api:8080
+    depends_on:
+      - api
+
   api:
     image: api:latest
     build:

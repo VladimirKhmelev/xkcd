@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XKCD Search</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<header>
+  <h1>XKCD Search</h1>
+  <a href="/admin">Admin Panel</a>
+</header>
+<main>
+  <div class="card">
+    <h2>Search comics by phrase</h2>
+    <form method="GET" action="/">
+      <div class="search-row">
+        <input type="text" class="flex-grow" name="phrase" value="{{.Phrase}}" placeholder="Enter search phrase..." autofocus>
+        <select name="limit">
+          <option value="10"  {{if eq .Limit 10}}selected{{end}}>10</option>
+          <option value="20"  {{if eq .Limit 20}}selected{{end}}>20</option>
+          <option value="50"  {{if eq .Limit 50}}selected{{end}}>50</option>
+          <option value="100" {{if eq .Limit 100}}selected{{end}}>100</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </form>
+  </div>
+
+  {{if .Error}}
+  <div class="alert alert-error">{{.Error}}</div>
+  {{end}}
+
+  {{if .Comics}}
+  <div class="results-header">
+    Found <strong>{{.Total}}</strong> comic{{if gt .Total 1}}s{{end}} for &ldquo;{{.Phrase}}&rdquo;
+  </div>
+  <div class="comics-grid">
+    {{range .Comics}}
+    <div class="comic-card">
+      <a href="https://xkcd.com/{{.ID}}/" target="_blank" rel="noopener">
+        <img src="{{.URL}}" alt="xkcd #{{.ID}}" loading="lazy">
+        <div class="card-footer">#{{.ID}}</div>
+      </a>
+    </div>
+    {{end}}
+  </div>
+  {{else if .Phrase}}
+  {{if not .Error}}
+  <div class="no-results">No comics found for &ldquo;{{.Phrase}}&rdquo;</div>
+  {{end}}
+  {{end}}
+</main>
+<script src="/static/js/search.js"></script>
+</body>
+</html>
