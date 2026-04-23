@@ -11,7 +11,6 @@ import (
 	"yadro.com/course/api/adapters/rest/middleware"
 )
 
-
 // --- helpers ---
 
 func okHandler() http.HandlerFunc {
@@ -21,7 +20,6 @@ func okHandler() http.HandlerFunc {
 func recorder() *httptest.ResponseRecorder {
 	return httptest.NewRecorder()
 }
-
 
 // --- Auth ---
 
@@ -142,4 +140,23 @@ func TestWithMetrics_DefaultStatus200(t *testing.T) {
 	w := recorder()
 	h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/", nil))
 	require.Equal(t, http.StatusOK, w.Code)
+}
+
+// --- Rate ---
+
+/* Одиночный запрос при ненулевом лимите проходит и получает 200 */
+func TestRate_AllowsSingleRequest(t *testing.T) {
+	h := middleware.Rate(okHandler(), 100)
+	w := recorder()
+	h(w, httptest.NewRequest(http.MethodGet, "/", nil))
+	require.Equal(t, http.StatusOK, w.Code)
+}
+
+/* Rate пропускает запрос к следующему handler'у и тот может вернуть любой статус */
+func TestRate_PassesStatusThrough(t *testing.T) {
+	inner := func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusCreated) }
+	h := middleware.Rate(inner, 100)
+	w := recorder()
+	h(w, httptest.NewRequest(http.MethodGet, "/", nil))
+	require.Equal(t, http.StatusCreated, w.Code)
 }

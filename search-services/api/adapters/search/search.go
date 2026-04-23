@@ -27,6 +27,10 @@ func NewClient(address string, log *slog.Logger) (*Client, error) {
 	}, nil
 }
 
+func NewClientWithGRPC(grpcClient searchpb.SearchClient, log *slog.Logger) (*Client, error) {
+	return &Client{client: grpcClient, log: log}, nil
+}
+
 func (c *Client) Ping(ctx context.Context) error {
 	_, err := c.client.Ping(ctx, &emptypb.Empty{})
 	return err
