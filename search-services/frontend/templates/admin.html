@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XKCD Admin</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<header>
+  <h1>XKCD Admin Panel</h1>
+  <a href="/">Back to Search</a>
+</header>
+<main>
+  {{if .Message}}
+  <div class="alert alert-success">{{.Message}}</div>
+  {{end}}
+
+  {{if .Error}}
+  <div class="alert alert-error">{{.Error}}</div>
+  {{end}}
+
+  {{if .LoggedIn}}
+
+  <!-- Status & Stats -->
+  <div class="card">
+    <h2>Database Status</h2>
+    {{if .StatusError}}
+    <div class="alert alert-error">{{.StatusError}}</div>
+    {{else}}
+    <p>
+      Current status:
+      <span class="status-badge status-{{.Status}}">{{.Status}}</span>
+    </p>
+    {{end}}
+  </div>
+
+  <div class="card">
+    <h2>Database Stats</h2>
+    {{if .StatsError}}
+    <div class="alert alert-error">{{.StatsError}}</div>
+    {{else}}
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value">{{index .Stats "comics_fetched"}}</div>
+        <div class="stat-label">Comics Fetched</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{index .Stats "comics_total"}}</div>
+        <div class="stat-label">Comics Total</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{index .Stats "words_total"}}</div>
+        <div class="stat-label">Words Total</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{index .Stats "words_unique"}}</div>
+        <div class="stat-label">Words Unique</div>
+      </div>
+    </div>
+    {{end}}
+  </div>
+
+  <!-- Actions -->
+  <div class="card">
+    <h2>Actions</h2>
+    <div class="actions-row">
+      <form method="POST" action="/admin/update">
+        <button type="submit" class="btn btn-primary">Update Database</button>
+      </form>
+      <form method="POST" action="/admin/drop">
+        <button type="submit" id="drop-btn" class="btn btn-danger">Drop Database</button>
+      </form>
+      <form method="POST" action="/admin/logout">
+        <button type="submit" class="btn btn-secondary">Logout</button>
+      </form>
+    </div>
+  </div>
+
+  {{else}}
+
+  <!-- Login form -->
+  <div class="card">
+    <h2>Login</h2>
+    <form method="POST" action="/admin/login">
+      <div class="form-group">
+        <label for="name">Username</label>
+        <input type="text" id="name" name="name" class="flex-grow" required autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" class="flex-grow" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+  </div>
+
+  {{end}}
+</main>
+<script src="/static/js/admin.js"></script>
+</body>
+</html>

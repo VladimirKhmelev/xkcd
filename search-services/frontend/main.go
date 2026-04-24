@@ -31,6 +31,11 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/static"))))
 	mux.HandleFunc("GET /", h.SearchPage)
+	mux.HandleFunc("GET /admin", h.AdminPage)
+	mux.HandleFunc("POST /admin/login", h.Login)
+	mux.HandleFunc("POST /admin/logout", h.Logout)
+	mux.HandleFunc("POST /admin/update", h.Update)
+	mux.HandleFunc("POST /admin/drop", h.Drop)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -57,6 +58,131 @@ func (h *Handler) SearchPage(w http.ResponseWriter, r *http.Request) {
 	h.render(w, "search.html", data)
 }
 
+func (h *Handler) AdminPage(w http.ResponseWriter, r *http.Request) {
+	token := h.getToken(r)
+	data := map[string]any{
+		"LoggedIn": token != "",
+	}
+
+	if token != "" {
+		stats, err := h.getStats(r, token)
+		if err != nil {
+			data["StatsError"] = err.Error()
+		} else {
+			data["Stats"] = stats
+		}
+		status, err := h.getStatus(r, token)
+		if err != nil {
+			data["StatusError"] = err.Error()
+		} else {
+			data["Status"] = status
+		}
+	}
+
+	if msg := r.URL.Query().Get("msg"); msg != "" {
+		data["Message"] = msg
+	}
+	if errMsg := r.URL.Query().Get("err"); errMsg != "" {
+		data["Error"] = errMsg
+	}
+
+	h.render(w, "admin.html", data)
+}
+
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		return
+	}
+	name := r.FormValue("name")
+	password := r.FormValue("password")
+
+	token, err := h.login(name, password)
+	if err != nil {
+		http.Redirect(w, r, "/admin?err="+url.QueryEscape("Login failed: "+err.Error()), http.StatusSeeOther)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+	})
+	http.Redirect(w, r, "/admin?msg="+url.QueryEscape("Logged in successfully"), http.StatusSeeOther)
+}
+
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   "",
+		Path:    "/",
+		MaxAge:  -1,
+		Expires: time.Unix(0, 0),
+	})
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		return
+	}
+	token := h.getToken(r)
+	if token == "" {
+		http.Redirect(w, r, "/admin?err="+url.QueryEscape("Not authenticated"), http.StatusSeeOther)
+		return
+	}
+
+	req, _ := http.NewRequestWithContext(r.Context(), http.MethodPost, h.apiAddress+"/api/db/update", nil)
+	req.Header.Set("Authorization", "Token "+token)
+	resp, err := h.httpClient.Do(req)
+	if err != nil {
+		http.Redirect(w, r, "/admin?err="+url.QueryEscape("Update request failed: "+err.Error()), http.StatusSeeOther)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusAccepted {
+		http.Redirect(w, r, "/admin?msg="+url.QueryEscape("Update already running"), http.StatusSeeOther)
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		http.Redirect(w, r, "/admin?err="+url.QueryEscape("Update failed: "+strings.TrimSpace(string(body))), http.StatusSeeOther)
+		return
+	}
+	http.Redirect(w, r, "/admin?msg="+url.QueryEscape("Update started"), http.StatusSeeOther)
+}
+
+func (h *Handler) Drop(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		return
+	}
+	token := h.getToken(r)
+	if token == "" {
+		http.Redirect(w, r, "/admin?err="+url.QueryEscape("Not authenticated"), http.StatusSeeOther)
+		return
+	}
+
+	req, _ := http.NewRequestWithContext(r.Context(), http.MethodDelete, h.apiAddress+"/api/db", nil)
+	req.Header.Set("Authorization", "Token "+token)
+	resp, err := h.httpClient.Do(req)
+	if err != nil {
+		http.Redirect(w, r, "/admin?err="+url.QueryEscape("Drop request failed: "+err.Error()), http.StatusSeeOther)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		http.Redirect(w, r, "/admin?err="+url.QueryEscape("Drop failed: "+strings.TrimSpace(string(body))), http.StatusSeeOther)
+		return
+	}
+	http.Redirect(w, r, "/admin?msg="+url.QueryEscape("Database dropped"), http.StatusSeeOther)
+}
+
 type comicsItem struct {
 	ID  int    `json:"id"`
 	URL string `json:"url"`
@@ -84,6 +210,66 @@ func (h *Handler) search(r *http.Request, phrase string, limit int) ([]comicsIte
 		return nil, 0, fmt.Errorf("failed to parse response: %w", err)
 	}
 	return result.Comics, result.Total, nil
+}
+
+func (h *Handler) login(name, password string) (string, error) {
+	body, _ := json.Marshal(map[string]string{"name": name, "password": password})
+	resp, err := h.httpClient.Post(h.apiAddress+"/api/login", "application/json", bytes.NewReader(body))
+	if err != nil {
+		return "", fmt.Errorf("login request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("invalid credentials")
+	}
+	token, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(token)), nil
+}
+
+func (h *Handler) getStats(r *http.Request, token string) (map[string]int, error) {
+	req, _ := http.NewRequestWithContext(r.Context(), http.MethodGet, h.apiAddress+"/api/db/stats", nil)
+	req.Header.Set("Authorization", "Token "+token)
+	resp, err := h.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var stats map[string]int
+	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
+		return nil, err
+	}
+	return stats, nil
+}
+
+func (h *Handler) getStatus(r *http.Request, token string) (string, error) {
+	req, _ := http.NewRequestWithContext(r.Context(), http.MethodGet, h.apiAddress+"/api/db/status", nil)
+	req.Header.Set("Authorization", "Token "+token)
+	resp, err := h.httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Status string `json:"status"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+	return result.Status, nil
+}
+
+func (h *Handler) getToken(r *http.Request) string {
+	c, err := r.Cookie("token")
+	if err != nil {
+		return ""
+	}
+	return c.Value
 }
 
 func (h *Handler) render(w http.ResponseWriter, name string, data any) {

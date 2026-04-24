@@ -41,7 +41,8 @@
 docker compose up -d
 ```
 
-- Веб-интерфейс: `http://localhost:28090`
+- Веб-интерфейс (поиск): `http://localhost:28090`
+- Панель администратора: `http://localhost:28090/admin`
 - API: `http://localhost:28080`
 
 Полный справочник — в [DOCS.md](DOCS.md).
