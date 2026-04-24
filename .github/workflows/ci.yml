@@ -15,7 +15,7 @@ jobs:
         run: docker compose build
 
       - name: Start services
-        run: docker compose up -d api words update search postgres nats
+        run: docker compose up -d api words update search postgres nats frontend
 
       - name: Wait for API to be ready
         run: |
@@ -24,6 +24,20 @@ jobs:
             echo "Waiting for API... ($i)"
             sleep 5
           done
+
+      - name: Wait for frontend to be ready
+        run: |
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:28090/ && break
+            echo "Waiting for frontend... ($i)"
+            sleep 3
+          done
+
+      - name: Smoke test frontend
+        run: |
+          curl -sf http://localhost:28090/ | grep -q "XKCD Search"
+          curl -sf "http://localhost:28090/?phrase=linux" | grep -q "XKCD Search"
+          curl -sf http://localhost:28090/admin | grep -q "XKCD Admin"
 
       - name: Run tests
         run: docker compose run --rm tests
@@ -46,7 +60,6 @@ jobs:
         with:
           go-version-file: search-services/go.mod
           cache-dependency-path: search-services/go.sum
-
       - name: Run unit tests
         run: make unit
 
