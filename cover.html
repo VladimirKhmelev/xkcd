@@ -111,7 +111,7 @@
 				
 				<option value="file27">yadro.com/course/update/core/service.go (0.0%)</option>
 				
-				<option value="file28">yadro.com/course/words/words/words.go (0.0%)</option>
+				<option value="file28">yadro.com/course/words/words/words.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -2160,30 +2160,30 @@ import (
         "github.com/kljensen/snowball/english"
 )
 
-func Norm(phrase string) []string <span class="cov0" title="0">{
-        cleaned := strings.Map(func(r rune) rune </span><span class="cov0" title="0">{
-                if unicode.IsLetter(r) || unicode.IsDigit(r) </span><span class="cov0" title="0">{
+func Norm(phrase string) []string <span class="cov5" title="8">{
+        cleaned := strings.Map(func(r rune) rune </span><span class="cov10" title="90">{
+                if unicode.IsLetter(r) || unicode.IsDigit(r) </span><span class="cov9" title="77">{
                         return unicode.ToLower(r)
                 }</span>
-                <span class="cov0" title="0">return ' '</span>
+                <span class="cov6" title="13">return ' '</span>
         }, phrase)
 
-        <span class="cov0" title="0">tokens := strings.Fields(cleaned)
+        <span class="cov5" title="8">tokens := strings.Fields(cleaned)
 
         seen := make(map[string]bool)
         var result []string
 
-        for _, w := range tokens </span><span class="cov0" title="0">{
-                if len(w) &lt;= 2 </span><span class="cov0" title="0">{
+        for _, w := range tokens </span><span class="cov6" title="18">{
+                if len(w) &lt;= 2 </span><span class="cov4" title="5">{
                         continue</span>
                 }
-                <span class="cov0" title="0">stemmed := english.Stem(w, false)
-                if !seen[stemmed] </span><span class="cov0" title="0">{
+                <span class="cov6" title="13">stemmed := english.Stem(w, false)
+                if !seen[stemmed] </span><span class="cov5" title="10">{
                         seen[stemmed] = true
                         result = append(result, stemmed)
                 }</span>
         }
-        <span class="cov0" title="0">return result</span>
+        <span class="cov5" title="8">return result</span>
 }
 </pre>
 		
