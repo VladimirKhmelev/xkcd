@@ -93,7 +93,7 @@
 				
 				<option value="file18">yadro.com/course/search/config/config.go (0.0%)</option>
 				
-				<option value="file19">yadro.com/course/search/core/service.go (0.0%)</option>
+				<option value="file19">yadro.com/course/search/core/service.go (100.0%)</option>
 				
 				<option value="file20">yadro.com/course/update/adapters/broker/broker.go (0.0%)</option>
 				
@@ -1483,7 +1483,7 @@ type Service struct {
         index map[string][]Comics
 }
 
-func NewService(log *slog.Logger, db DB, words Words) *Service <span class="cov0" title="0">{
+func NewService(log *slog.Logger, db DB, words Words) *Service <span class="cov9" title="11">{
         return &amp;Service{
                 log:   log,
                 db:    db,
@@ -1492,81 +1492,81 @@ func NewService(log *slog.Logger, db DB, words Words) *Service <span class="cov0
         }
 }</span>
 
-func (s *Service) Search(ctx context.Context, phrase string, limit int) ([]Comics, error) <span class="cov0" title="0">{
+func (s *Service) Search(ctx context.Context, phrase string, limit int) ([]Comics, error) <span class="cov6" title="4">{
         keywords, err := s.words.Norm(ctx, phrase)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("failed to normalize phrase: %w", err)
         }</span>
-        <span class="cov0" title="0">if len(keywords) == 0 </span><span class="cov0" title="0">{
+        <span class="cov4" title="3">if len(keywords) == 0 </span><span class="cov1" title="1">{
                 return []Comics{}, nil
         }</span>
-        <span class="cov0" title="0">return s.db.Search(ctx, keywords, limit)</span>
+        <span class="cov3" title="2">return s.db.Search(ctx, keywords, limit)</span>
 }
 
-func (s *Service) ResetIndex() <span class="cov0" title="0">{
+func (s *Service) ResetIndex() <span class="cov1" title="1">{
         s.mu.Lock()
         s.index = make(map[string][]Comics)
         s.mu.Unlock()
         s.log.Info("index reset")
 }</span>
 
-func (s *Service) BuildIndex(ctx context.Context) error <span class="cov0" title="0">{
+func (s *Service) BuildIndex(ctx context.Context) error <span class="cov6" title="5">{
         all, err := s.db.AllComics(ctx)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return fmt.Errorf("failed to fetch comics for index: %w", err)
         }</span>
-        <span class="cov0" title="0">newIndex := make(map[string][]Comics, len(all))
-        for _, ic := range all </span><span class="cov0" title="0">{
+        <span class="cov6" title="4">newIndex := make(map[string][]Comics, len(all))
+        for _, ic := range all </span><span class="cov8" title="9">{
                 c := Comics{ID: ic.ID, URL: ic.URL}
-                for _, kw := range ic.Keywords </span><span class="cov0" title="0">{
+                for _, kw := range ic.Keywords </span><span class="cov10" title="12">{
                         newIndex[kw] = append(newIndex[kw], c)
                 }</span>
         }
-        <span class="cov0" title="0">s.mu.Lock()
+        <span class="cov6" title="4">s.mu.Lock()
         s.index = newIndex
         s.mu.Unlock()
         s.log.Info("index built", "keywords", len(newIndex))
         return nil</span>
 }
 
-func (s *Service) ISearch(ctx context.Context, phrase string, limit int) ([]Comics, error) <span class="cov0" title="0">{
+func (s *Service) ISearch(ctx context.Context, phrase string, limit int) ([]Comics, error) <span class="cov7" title="6">{
         keywords, err := s.words.Norm(ctx, phrase)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("failed to normalize phrase: %w", err)
         }</span>
-        <span class="cov0" title="0">if len(keywords) == 0 </span><span class="cov0" title="0">{
+        <span class="cov6" title="5">if len(keywords) == 0 </span><span class="cov1" title="1">{
                 return []Comics{}, nil
         }</span>
 
-        <span class="cov0" title="0">s.mu.RLock()
+        <span class="cov6" title="4">s.mu.RLock()
         counts := make(map[int]int)
         seen := make(map[int]Comics)
-        for _, kw := range keywords </span><span class="cov0" title="0">{
-                for _, c := range s.index[kw] </span><span class="cov0" title="0">{
+        for _, kw := range keywords </span><span class="cov6" title="5">{
+                for _, c := range s.index[kw] </span><span class="cov8" title="8">{
                         counts[c.ID]++
                         seen[c.ID] = c
                 }</span>
         }
-        <span class="cov0" title="0">s.mu.RUnlock()
+        <span class="cov6" title="4">s.mu.RUnlock()
 
         type scored struct {
                 c Comics
                 n int
         }
         result := make([]scored, 0, len(counts))
-        for id, n := range counts </span><span class="cov0" title="0">{
+        for id, n := range counts </span><span class="cov8" title="7">{
                 result = append(result, scored{seen[id], n})
         }</span>
-        <span class="cov0" title="0">sort.Slice(result, func(i, j int) bool </span><span class="cov0" title="0">{ return result[i].n &gt; result[j].n }</span>)
-        <span class="cov0" title="0">if limit &gt; 0 &amp;&amp; len(result) &gt; limit </span><span class="cov0" title="0">{
+        <span class="cov6" title="4">sort.Slice(result, func(i, j int) bool </span><span class="cov6" title="4">{ return result[i].n &gt; result[j].n }</span>)
+        <span class="cov6" title="4">if limit &gt; 0 &amp;&amp; len(result) &gt; limit </span><span class="cov1" title="1">{
                 result = result[:limit]
         }</span>
 
-        <span class="cov0" title="0">comics := make([]Comics, len(result))
-        for i, r := range result </span><span class="cov0" title="0">{
+        <span class="cov6" title="4">comics := make([]Comics, len(result))
+        for i, r := range result </span><span class="cov7" title="6">{
                 comics[i] = r.c
         }</span>
-        <span class="cov0" title="0">return comics, nil</span>
+        <span class="cov6" title="4">return comics, nil</span>
 }
 </pre>
 		
