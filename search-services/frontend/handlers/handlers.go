@@ -141,7 +141,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/admin?err="+url.QueryEscape("Update request failed: "+err.Error()), http.StatusSeeOther)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusAccepted {
 		http.Redirect(w, r, "/admin?msg="+url.QueryEscape("Update already running"), http.StatusSeeOther)
@@ -173,7 +173,7 @@ func (h *Handler) Drop(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/admin?err="+url.QueryEscape("Drop request failed: "+err.Error()), http.StatusSeeOther)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -195,7 +195,7 @@ func (h *Handler) search(r *http.Request, phrase string, limit int) ([]comicsIte
 	if err != nil {
 		return nil, 0, fmt.Errorf("search request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -218,7 +218,7 @@ func (h *Handler) login(name, password string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("login request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("invalid credentials")
@@ -237,7 +237,7 @@ func (h *Handler) getStats(r *http.Request, token string) (map[string]int, error
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var stats map[string]int
 	if err := json.NewDecoder(resp.Body).Decode(&stats); err != nil {
@@ -253,7 +253,7 @@ func (h *Handler) getStatus(r *http.Request, token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var result struct {
 		Status string `json:"status"`

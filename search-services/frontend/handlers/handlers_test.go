@@ -45,10 +45,10 @@ func TestSearchPage_WithPhrase(t *testing.T) {
 	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/search", r.URL.Path)
 		assert.Equal(t, "linux", r.URL.Query().Get("phrase"))
-		json.NewEncoder(w).Encode(map[string]any{
+		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{
 			"comics": []map[string]any{{"id": 1, "url": "http://img"}},
 			"total":  1,
-		})
+		}))
 	}))
 	defer api.Close()
 
@@ -67,7 +67,7 @@ func TestSearchPage_WithPhrase(t *testing.T) {
 func TestSearchPage_CustomLimit(t *testing.T) {
 	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "50", r.URL.Query().Get("limit"))
-		json.NewEncoder(w).Encode(map[string]any{"comics": []any{}, "total": 0})
+		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{"comics": []any{}, "total": 0}))
 	}))
 	defer api.Close()
 
@@ -84,7 +84,7 @@ func TestSearchPage_CustomLimit(t *testing.T) {
 func TestSearchPage_InvalidLimit_FallsBackTo10(t *testing.T) {
 	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "10", r.URL.Query().Get("limit"))
-		json.NewEncoder(w).Encode(map[string]any{"comics": []any{}, "total": 0})
+		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{"comics": []any{}, "total": 0}))
 	}))
 	defer api.Close()
 
@@ -133,9 +133,9 @@ func TestAdminPage_LoggedIn(t *testing.T) {
 	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/api/db/stats":
-			json.NewEncoder(w).Encode(map[string]int{"comics_fetched": 100})
+			require.NoError(t, json.NewEncoder(w).Encode(map[string]int{"comics_fetched": 100}))
 		case "/api/db/status":
-			json.NewEncoder(w).Encode(map[string]string{"status": "idle"})
+			require.NoError(t, json.NewEncoder(w).Encode(map[string]string{"status": "idle"}))
 		}
 	}))
 	defer api.Close()
@@ -180,7 +180,8 @@ func TestLogin_WrongMethod(t *testing.T) {
 // Успешный логин устанавливает куку с токеном и редиректит на /admin
 func TestLogin_Success(t *testing.T) {
 	api := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("tok123"))
+		_, err := w.Write([]byte("tok123"))
+		require.NoError(t, err)
 	}))
 	defer api.Close()
 

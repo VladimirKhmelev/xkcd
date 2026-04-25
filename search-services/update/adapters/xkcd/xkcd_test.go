@@ -37,13 +37,13 @@ func TestNewClient_OK(t *testing.T) {
 // Проверяет успешное получение информации о комиксе
 func TestGet_OK(t *testing.T) {
 	srv := makeServer(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{
+		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{
 			"num":        52,
 			"img":        "https://imgs.xkcd.com/comics/52.png",
 			"title":      "Title",
 			"alt":        "Alt text",
 			"transcript": "Transcript",
-		})
+		}))
 	})
 	defer srv.Close()
 
@@ -82,7 +82,7 @@ func TestGet_ServerError(t *testing.T) {
 // Проверяет, что клиент корректно извлекает номер последнего комикса из ответа сервера
 func TestLastID_OK(t *testing.T) {
 	srv := makeServer(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{"num": 3000})
+		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{"num": 3000}))
 	})
 	defer srv.Close()
 

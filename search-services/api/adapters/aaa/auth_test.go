@@ -25,8 +25,8 @@ func makeAAA(t *testing.T, ttl time.Duration) aaa.AAA {
 
 // Проверяет, что создание AAA завершается ошибкой, если переменная окружения ADMIN_USER не задана
 func TestNew_MissingUser(t *testing.T) {
-	os.Unsetenv("ADMIN_USER")
-	os.Unsetenv("ADMIN_PASSWORD")
+	require.NoError(t, os.Unsetenv("ADMIN_USER"))
+	require.NoError(t, os.Unsetenv("ADMIN_PASSWORD"))
 	_, err := aaa.New(time.Minute, slog.New(slog.NewTextHandler(os.Stderr, nil)))
 	require.Error(t, err)
 }
@@ -34,7 +34,7 @@ func TestNew_MissingUser(t *testing.T) {
 // Проверяет, что создание AAA завершается ошибкой, если переменная окружения ADMIN_PASSWORD не задана
 func TestNew_MissingPassword(t *testing.T) {
 	t.Setenv("ADMIN_USER", "admin")
-	os.Unsetenv("ADMIN_PASSWORD")
+	require.NoError(t, os.Unsetenv("ADMIN_PASSWORD"))
 	_, err := aaa.New(time.Minute, slog.New(slog.NewTextHandler(os.Stderr, nil)))
 	require.Error(t, err)
 }
