@@ -25,6 +25,10 @@ func NewClient(address string, log *slog.Logger) (*Client, error) {
 	}, nil
 }
 
+func NewClientWithGRPC(client wordspb.WordsClient, log *slog.Logger) *Client {
+	return &Client{client: client, log: log}
+}
+
 func (c *Client) Norm(ctx context.Context, phrase string) ([]string, error) {
 	resp, err := c.client.Norm(ctx, &wordspb.WordsRequest{Phrase: phrase})
 	if err != nil {

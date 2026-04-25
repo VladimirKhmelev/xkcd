@@ -73,7 +73,7 @@
 				
 				<option value="file8">yadro.com/course/api/adapters/words/words.go (63.6%)</option>
 				
-				<option value="file9">yadro.com/course/api/config/config.go (0.0%)</option>
+				<option value="file9">yadro.com/course/api/config/config.go (75.0%)</option>
 				
 				<option value="file10">yadro.com/course/frontend/config/config.go (0.0%)</option>
 				
@@ -85,13 +85,13 @@
 				
 				<option value="file14">yadro.com/course/search/adapters/db/storage.go (0.0%)</option>
 				
-				<option value="file15">yadro.com/course/search/adapters/grpc/server.go (0.0%)</option>
+				<option value="file15">yadro.com/course/search/adapters/grpc/server.go (100.0%)</option>
 				
-				<option value="file16">yadro.com/course/search/adapters/initiator/initiator.go (0.0%)</option>
+				<option value="file16">yadro.com/course/search/adapters/initiator/initiator.go (100.0%)</option>
 				
-				<option value="file17">yadro.com/course/search/adapters/words/words.go (0.0%)</option>
+				<option value="file17">yadro.com/course/search/adapters/words/words.go (55.6%)</option>
 				
-				<option value="file18">yadro.com/course/search/config/config.go (0.0%)</option>
+				<option value="file18">yadro.com/course/search/config/config.go (66.7%)</option>
 				
 				<option value="file19">yadro.com/course/search/core/service.go (100.0%)</option>
 				
@@ -101,15 +101,15 @@
 				
 				<option value="file22">yadro.com/course/update/adapters/db/storage.go (0.0%)</option>
 				
-				<option value="file23">yadro.com/course/update/adapters/grpc/server.go (0.0%)</option>
+				<option value="file23">yadro.com/course/update/adapters/grpc/server.go (95.5%)</option>
 				
-				<option value="file24">yadro.com/course/update/adapters/words/words.go (0.0%)</option>
+				<option value="file24">yadro.com/course/update/adapters/words/words.go (63.6%)</option>
 				
 				<option value="file25">yadro.com/course/update/adapters/xkcd/xkcd.go (78.4%)</option>
 				
-				<option value="file26">yadro.com/course/update/config/config.go (0.0%)</option>
+				<option value="file26">yadro.com/course/update/config/config.go (80.0%)</option>
 				
-				<option value="file27">yadro.com/course/update/core/service.go (0.0%)</option>
+				<option value="file27">yadro.com/course/update/core/service.go (79.7%)</option>
 				
 				<option value="file28">yadro.com/course/words/words/words.go (100.0%)</option>
 				
@@ -748,12 +748,12 @@ type Config struct {
         TokenTTL          time.Duration `yaml:"token_ttl" env:"TOKEN_TTL" env-default:"24h"`
 }
 
-func MustLoad(configPath string) Config <span class="cov0" title="0">{
+func MustLoad(configPath string) Config <span class="cov10" title="2">{
         var cfg Config
         if err := cleanenv.ReadConfig(configPath, &amp;cfg); err != nil </span><span class="cov0" title="0">{
                 log.Fatalf("cannot read config %q: %s", configPath, err)
         }</span>
-        <span class="cov0" title="0">return cfg</span>
+        <span class="cov10" title="2">return cfg</span>
 }
 </pre>
 		
@@ -1316,39 +1316,39 @@ type Server struct {
         service core.Searcher
 }
 
-func NewServer(service core.Searcher) *Server <span class="cov0" title="0">{
+func NewServer(service core.Searcher) *Server <span class="cov10" title="6">{
         return &amp;Server{service: service}
 }</span>
 
-func (s *Server) Ping(_ context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) <span class="cov0" title="0">{
+func (s *Server) Ping(_ context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) <span class="cov1" title="1">{
         return &amp;emptypb.Empty{}, nil
 }</span>
 
-func (s *Server) Search(ctx context.Context, req *searchpb.SearchRequest) (*searchpb.SearchReply, error) <span class="cov0" title="0">{
+func (s *Server) Search(ctx context.Context, req *searchpb.SearchRequest) (*searchpb.SearchReply, error) <span class="cov6" title="3">{
         comics, err := s.service.Search(ctx, req.Phrase, int(req.Limit))
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return nil, status.Error(codes.Internal, err.Error())
         }</span>
-        <span class="cov0" title="0">pbComics := make([]*searchpb.Comics, 0, len(comics))
-        for _, c := range comics </span><span class="cov0" title="0">{
+        <span class="cov4" title="2">pbComics := make([]*searchpb.Comics, 0, len(comics))
+        for _, c := range comics </span><span class="cov1" title="1">{
                 pbComics = append(pbComics, &amp;searchpb.Comics{Id: int64(c.ID), Url: c.URL})
         }</span>
-        <span class="cov0" title="0">return &amp;searchpb.SearchReply{
+        <span class="cov4" title="2">return &amp;searchpb.SearchReply{
                 Comics: pbComics,
                 Total:  int64(len(pbComics)),
         }, nil</span>
 }
 
-func (s *Server) ISearch(ctx context.Context, req *searchpb.SearchRequest) (*searchpb.SearchReply, error) <span class="cov0" title="0">{
+func (s *Server) ISearch(ctx context.Context, req *searchpb.SearchRequest) (*searchpb.SearchReply, error) <span class="cov4" title="2">{
         comics, err := s.service.ISearch(ctx, req.Phrase, int(req.Limit))
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return nil, status.Error(codes.Internal, err.Error())
         }</span>
-        <span class="cov0" title="0">pbComics := make([]*searchpb.Comics, 0, len(comics))
-        for _, c := range comics </span><span class="cov0" title="0">{
+        <span class="cov1" title="1">pbComics := make([]*searchpb.Comics, 0, len(comics))
+        for _, c := range comics </span><span class="cov4" title="2">{
                 pbComics = append(pbComics, &amp;searchpb.Comics{Id: int64(c.ID), Url: c.URL})
         }</span>
-        <span class="cov0" title="0">return &amp;searchpb.SearchReply{
+        <span class="cov1" title="1">return &amp;searchpb.SearchReply{
                 Comics: pbComics,
                 Total:  int64(len(pbComics)),
         }, nil</span>
@@ -1371,27 +1371,27 @@ type Initiator struct {
         ttl     time.Duration
 }
 
-func New(log *slog.Logger, builder core.IndexBuilder, ttl time.Duration) *Initiator <span class="cov0" title="0">{
+func New(log *slog.Logger, builder core.IndexBuilder, ttl time.Duration) *Initiator <span class="cov7" title="4">{
         return &amp;Initiator{log: log, builder: builder, ttl: ttl}
 }</span>
 
-func (i *Initiator) Run(ctx context.Context) <span class="cov0" title="0">{
+func (i *Initiator) Run(ctx context.Context) <span class="cov6" title="3">{
         i.build(ctx)
         ticker := time.NewTicker(i.ttl)
         defer ticker.Stop()
-        for </span><span class="cov0" title="0">{
+        for </span><span class="cov10" title="6">{
                 select </span>{
-                case &lt;-ctx.Done():<span class="cov0" title="0">
+                case &lt;-ctx.Done():<span class="cov6" title="3">
                         return</span>
-                case &lt;-ticker.C:<span class="cov0" title="0">
+                case &lt;-ticker.C:<span class="cov6" title="3">
                         i.build(ctx)</span>
                 }
         }
 }
 
-func (i *Initiator) build(ctx context.Context) <span class="cov0" title="0">{
+func (i *Initiator) build(ctx context.Context) <span class="cov10" title="6">{
         i.log.Info("building search index")
-        if err := i.builder.BuildIndex(ctx); err != nil </span><span class="cov0" title="0">{
+        if err := i.builder.BuildIndex(ctx); err != nil </span><span class="cov1" title="1">{
                 i.log.Error("failed to build index", "error", err)
         }</span>
 }
@@ -1424,12 +1424,16 @@ func NewClient(address string, log *slog.Logger) (*Client, error) <span class="c
         }, nil</span>
 }
 
-func (c *Client) Norm(ctx context.Context, phrase string) ([]string, error) <span class="cov0" title="0">{
+func NewClientWithGRPC(client wordspb.WordsClient, log *slog.Logger) *Client <span class="cov10" title="3">{
+        return &amp;Client{client: client, log: log}
+}</span>
+
+func (c *Client) Norm(ctx context.Context, phrase string) ([]string, error) <span class="cov10" title="3">{
         resp, err := c.client.Norm(ctx, &amp;wordspb.WordsRequest{Phrase: phrase})
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return nil, err
         }</span>
-        <span class="cov0" title="0">return resp.Words, nil</span>
+        <span class="cov6" title="2">return resp.Words, nil</span>
 }
 </pre>
 		
@@ -1452,15 +1456,15 @@ type Config struct {
         BrokerAddress string        `yaml:"broker_address" env:"BROKER_ADDRESS"  env-default:"nats://localhost:4222"`
 }
 
-func MustLoad(configPath string) Config <span class="cov0" title="0">{
+func MustLoad(configPath string) Config <span class="cov10" title="2">{
         var cfg Config
-        if err := cleanenv.ReadConfig(configPath, &amp;cfg); err != nil </span><span class="cov0" title="0">{
+        if err := cleanenv.ReadConfig(configPath, &amp;cfg); err != nil </span><span class="cov10" title="2">{
                 if err2 := cleanenv.ReadEnv(&amp;cfg); err2 != nil </span><span class="cov0" title="0">{
                         slog.Error("cannot read config", "path", configPath, "error", err)
                         os.Exit(1)
                 }</span>
         }
-        <span class="cov0" title="0">return cfg</span>
+        <span class="cov10" title="2">return cfg</span>
 }
 </pre>
 		
@@ -1755,7 +1759,7 @@ import (
         "yadro.com/course/update/core"
 )
 
-func NewServer(service core.Updater) *Server <span class="cov0" title="0">{
+func NewServer(service core.Updater) *Server <span class="cov10" title="10">{
         return &amp;Server{service: service}
 }</span>
 
@@ -1764,41 +1768,41 @@ type Server struct {
         service core.Updater
 }
 
-func (s *Server) Ping(_ context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) <span class="cov0" title="0">{
+func (s *Server) Ping(_ context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) <span class="cov1" title="1">{
         return &amp;emptypb.Empty{}, nil
 }</span>
 
-func (s *Server) Status(ctx context.Context, _ *emptypb.Empty) (*updatepb.StatusReply, error) <span class="cov0" title="0">{
+func (s *Server) Status(ctx context.Context, _ *emptypb.Empty) (*updatepb.StatusReply, error) <span class="cov3" title="2">{
         st := s.service.Status(ctx)
         var grpcStatus updatepb.Status
         switch st </span>{
-        case core.StatusRunning:<span class="cov0" title="0">
+        case core.StatusRunning:<span class="cov1" title="1">
                 grpcStatus = updatepb.Status_STATUS_RUNNING</span>
-        case core.StatusIdle:<span class="cov0" title="0">
+        case core.StatusIdle:<span class="cov1" title="1">
                 grpcStatus = updatepb.Status_STATUS_IDLE</span>
         default:<span class="cov0" title="0">
                 grpcStatus = updatepb.Status_STATUS_UNSPECIFIED</span>
         }
-        <span class="cov0" title="0">return &amp;updatepb.StatusReply{Status: grpcStatus}, nil</span>
+        <span class="cov3" title="2">return &amp;updatepb.StatusReply{Status: grpcStatus}, nil</span>
 }
 
-func (s *Server) Update(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) <span class="cov0" title="0">{
+func (s *Server) Update(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) <span class="cov5" title="3">{
         err := s.service.Update(ctx)
-        if errors.Is(err, core.ErrUpdateRunning) </span><span class="cov0" title="0">{
+        if errors.Is(err, core.ErrUpdateRunning) </span><span class="cov1" title="1">{
                 return nil, status.Error(codes.Aborted, "update in progress")
         }</span>
-        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+        <span class="cov3" title="2">if err != nil </span><span class="cov1" title="1">{
                 return nil, status.Error(codes.Internal, err.Error())
         }</span>
-        <span class="cov0" title="0">return &amp;emptypb.Empty{}, nil</span>
+        <span class="cov1" title="1">return &amp;emptypb.Empty{}, nil</span>
 }
 
-func (s *Server) Stats(ctx context.Context, _ *emptypb.Empty) (*updatepb.StatsReply, error) <span class="cov0" title="0">{
+func (s *Server) Stats(ctx context.Context, _ *emptypb.Empty) (*updatepb.StatsReply, error) <span class="cov3" title="2">{
         stats, err := s.service.Stats(ctx)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return nil, status.Error(codes.Internal, err.Error())
         }</span>
-        <span class="cov0" title="0">return &amp;updatepb.StatsReply{
+        <span class="cov1" title="1">return &amp;updatepb.StatsReply{
                 WordsTotal:    int64(stats.WordsTotal),
                 WordsUnique:   int64(stats.WordsUnique),
                 ComicsTotal:   int64(stats.ComicsTotal),
@@ -1806,11 +1810,11 @@ func (s *Server) Stats(ctx context.Context, _ *emptypb.Empty) (*updatepb.StatsRe
         }, nil</span>
 }
 
-func (s *Server) Drop(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) <span class="cov0" title="0">{
-        if err := s.service.Drop(ctx); err != nil </span><span class="cov0" title="0">{
+func (s *Server) Drop(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) <span class="cov3" title="2">{
+        if err := s.service.Drop(ctx); err != nil </span><span class="cov1" title="1">{
                 return nil, status.Error(codes.Internal, err.Error())
         }</span>
-        <span class="cov0" title="0">return &amp;emptypb.Empty{}, nil</span>
+        <span class="cov1" title="1">return &amp;emptypb.Empty{}, nil</span>
 }
 </pre>
 		
@@ -1842,15 +1846,19 @@ func NewClient(address string, log *slog.Logger) (*Client, error) <span class="c
         }, nil</span>
 }
 
-func (c Client) Norm(ctx context.Context, phrase string) ([]string, error) <span class="cov0" title="0">{
+func NewClientWithGRPC(client wordspb.WordsClient, log *slog.Logger) *Client <span class="cov10" title="5">{
+        return &amp;Client{client: client, log: log}
+}</span>
+
+func (c Client) Norm(ctx context.Context, phrase string) ([]string, error) <span class="cov7" title="3">{
         resp, err := c.client.Norm(ctx, &amp;wordspb.WordsRequest{Phrase: phrase})
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return nil, err
         }</span>
-        <span class="cov0" title="0">return resp.Words, nil</span>
+        <span class="cov4" title="2">return resp.Words, nil</span>
 }
 
-func (c Client) Ping(ctx context.Context) error <span class="cov0" title="0">{
+func (c Client) Ping(ctx context.Context) error <span class="cov4" title="2">{
         _, err := c.client.Ping(ctx, &amp;emptypb.Empty{})
         return err
 }</span>
@@ -1988,14 +1996,14 @@ type Config struct {
         BrokerAddress string `yaml:"broker_address" env:"BROKER_ADDRESS" env-default:"nats://localhost:4222"`
 }
 
-func MustLoad(configPath string) Config <span class="cov0" title="0">{
+func MustLoad(configPath string) Config <span class="cov10" title="2">{
         var cfg Config
-        if err := cleanenv.ReadConfig(configPath, &amp;cfg); err != nil </span><span class="cov0" title="0">{
+        if err := cleanenv.ReadConfig(configPath, &amp;cfg); err != nil </span><span class="cov10" title="2">{
                 if err2 := cleanenv.ReadEnv(&amp;cfg); err2 != nil </span><span class="cov0" title="0">{
                         log.Fatalf("cannot read config %q: %s", configPath, err)
                 }</span>
         }
-        <span class="cov0" title="0">return cfg</span>
+        <span class="cov10" title="2">return cfg</span>
 }
 </pre>
 		
@@ -2021,11 +2029,11 @@ type Service struct {
 
 func NewService(
         log *slog.Logger, db DB, xkcd XKCD, words Words, publisher Publisher, concurrency int,
-) (*Service, error) <span class="cov0" title="0">{
-        if concurrency &lt; 1 </span><span class="cov0" title="0">{
+) (*Service, error) <span class="cov10" title="9">{
+        if concurrency &lt; 1 </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("wrong concurrency specified: %d", concurrency)
         }</span>
-        <span class="cov0" title="0">return &amp;Service{
+        <span class="cov9" title="8">return &amp;Service{
                 log:         log,
                 db:          db,
                 xkcd:        xkcd,
@@ -2035,70 +2043,70 @@ func NewService(
         }, nil</span>
 }
 
-func (s *Service) Update(ctx context.Context) (err error) <span class="cov0" title="0">{
-        if !s.isRunning.CompareAndSwap(false, true) </span><span class="cov0" title="0">{
+func (s *Service) Update(ctx context.Context) (err error) <span class="cov6" title="4">{
+        if !s.isRunning.CompareAndSwap(false, true) </span><span class="cov1" title="1">{
                 return ErrUpdateRunning
         }</span>
-        <span class="cov0" title="0">defer s.isRunning.Store(false)
+        <span class="cov5" title="3">defer s.isRunning.Store(false)
 
         lastID, err := s.xkcd.LastID(ctx)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to get last ID: %w", err)
         }</span>
 
-        <span class="cov0" title="0">existingIDs, err := s.db.IDs(ctx)
+        <span class="cov5" title="3">existingIDs, err := s.db.IDs(ctx)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to get existing IDs: %w", err)
         }</span>
 
-        <span class="cov0" title="0">existingSet := make(map[int]struct{}, len(existingIDs))
-        for _, id := range existingIDs </span><span class="cov0" title="0">{
+        <span class="cov5" title="3">existingSet := make(map[int]struct{}, len(existingIDs))
+        for _, id := range existingIDs </span><span class="cov5" title="3">{
                 existingSet[id] = struct{}{}
         }</span>
 
-        <span class="cov0" title="0">missingIDs := make([]int, 0)
-        for id := 1; id &lt;= lastID; id++ </span><span class="cov0" title="0">{
+        <span class="cov5" title="3">missingIDs := make([]int, 0)
+        for id := 1; id &lt;= lastID; id++ </span><span class="cov7" title="5">{
                 if id == 404 </span><span class="cov0" title="0">{
                         continue</span>
                 }
-                <span class="cov0" title="0">if _, exists := existingSet[id]; !exists </span><span class="cov0" title="0">{
+                <span class="cov7" title="5">if _, exists := existingSet[id]; !exists </span><span class="cov3" title="2">{
                         missingIDs = append(missingIDs, id)
                 }</span>
         }
 
-        <span class="cov0" title="0">if len(missingIDs) == 0 </span><span class="cov0" title="0">{
+        <span class="cov5" title="3">if len(missingIDs) == 0 </span><span class="cov3" title="2">{
                 return nil
         }</span>
 
-        <span class="cov0" title="0">jobs := make(chan int)
-        go func() </span><span class="cov0" title="0">{
-                for _, id := range missingIDs </span><span class="cov0" title="0">{
+        <span class="cov1" title="1">jobs := make(chan int)
+        go func() </span><span class="cov1" title="1">{
+                for _, id := range missingIDs </span><span class="cov3" title="2">{
                         jobs &lt;- id
                 }</span>
-                <span class="cov0" title="0">close(jobs)</span>
+                <span class="cov1" title="1">close(jobs)</span>
         }()
 
-        <span class="cov0" title="0">var wg sync.WaitGroup
+        <span class="cov1" title="1">var wg sync.WaitGroup
 
-        for i := 0; i &lt; s.concurrency; i++ </span><span class="cov0" title="0">{
-                wg.Go(func() </span><span class="cov0" title="0">{
-                        for id := range jobs </span><span class="cov0" title="0">{
+        for i := 0; i &lt; s.concurrency; i++ </span><span class="cov3" title="2">{
+                wg.Go(func() </span><span class="cov3" title="2">{
+                        for id := range jobs </span><span class="cov3" title="2">{
                                 if ctx.Err() != nil </span><span class="cov0" title="0">{
                                         return
                                 }</span>
-                                <span class="cov0" title="0">comic, err := s.xkcd.Get(ctx, id)
+                                <span class="cov3" title="2">comic, err := s.xkcd.Get(ctx, id)
                                 if err != nil </span><span class="cov0" title="0">{
                                         s.log.Warn("Failed to fetch comic", "id", id, "error", err)
                                         continue</span>
                                 }
 
-                                <span class="cov0" title="0">keywords, err := s.words.Norm(ctx, comic.Description)
+                                <span class="cov3" title="2">keywords, err := s.words.Norm(ctx, comic.Description)
                                 if err != nil </span><span class="cov0" title="0">{
                                         s.log.Warn("Failed to normalize words", "id", id, "error", err)
                                         continue</span>
                                 }
 
-                                <span class="cov0" title="0">if err := s.db.Add(ctx, Comics{
+                                <span class="cov3" title="2">if err := s.db.Add(ctx, Comics{
                                         ID:    comic.ID,
                                         URL:   comic.URL,
                                         Words: keywords,
@@ -2109,44 +2117,44 @@ func (s *Service) Update(ctx context.Context) (err error) <span class="cov0" tit
                 })
         }
 
-        <span class="cov0" title="0">wg.Wait()
+        <span class="cov1" title="1">wg.Wait()
         s.publisher.PublishUpdated()
         return nil</span>
 }
 
-func (s *Service) Stats(ctx context.Context) (ServiceStats, error) <span class="cov0" title="0">{
+func (s *Service) Stats(ctx context.Context) (ServiceStats, error) <span class="cov3" title="2">{
         dbStats, err := s.db.Stats(ctx)
         if err != nil </span><span class="cov0" title="0">{
                 return ServiceStats{}, err
         }</span>
 
-        <span class="cov0" title="0">lastID, err := s.xkcd.LastID(ctx)
+        <span class="cov3" title="2">lastID, err := s.xkcd.LastID(ctx)
         if err != nil </span><span class="cov0" title="0">{
                 return ServiceStats{}, err
         }</span>
 
-        <span class="cov0" title="0">comicsTotal := lastID
-        if lastID &gt;= 404 </span><span class="cov0" title="0">{
+        <span class="cov3" title="2">comicsTotal := lastID
+        if lastID &gt;= 404 </span><span class="cov1" title="1">{
                 comicsTotal--
         }</span>
-        <span class="cov0" title="0">return ServiceStats{
+        <span class="cov3" title="2">return ServiceStats{
                 DBStats:     dbStats,
                 ComicsTotal: comicsTotal,
         }, nil</span>
 }
 
-func (s *Service) Status(ctx context.Context) ServiceStatus <span class="cov0" title="0">{
+func (s *Service) Status(ctx context.Context) ServiceStatus <span class="cov1" title="1">{
         if s.isRunning.Load() </span><span class="cov0" title="0">{
                 return StatusRunning
         }</span>
-        <span class="cov0" title="0">return StatusIdle</span>
+        <span class="cov1" title="1">return StatusIdle</span>
 }
 
-func (s *Service) Drop(ctx context.Context) error <span class="cov0" title="0">{
+func (s *Service) Drop(ctx context.Context) error <span class="cov1" title="1">{
         if err := s.db.Drop(ctx); err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
-        <span class="cov0" title="0">s.publisher.PublishDropped()
+        <span class="cov1" title="1">s.publisher.PublishDropped()
         return nil</span>
 }
 </pre>
