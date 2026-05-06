@@ -11,6 +11,7 @@ import (
 	"os/signal"
 
 	"yadro.com/course/api/adapters/aaa"
+	apidb "yadro.com/course/api/adapters/db"
 	"yadro.com/course/api/adapters/rest"
 	"yadro.com/course/api/adapters/rest/middleware"
 	searchadapter "yadro.com/course/api/adapters/search"
@@ -56,6 +57,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	userDB, err := apidb.New(log, cfg.DBAddress)
+	if err != nil {
+		log.Error("cannot init user db", "error", err)
+		os.Exit(1)
+	}
+	if err := userDB.Migrate(); err != nil {
+		log.Error("cannot migrate user db", "error", err)
+		os.Exit(1)
+	}
+
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /metrics", rest.NewMetricsHandler())
@@ -65,6 +76,7 @@ func main() {
 		"search": searchClient,
 	}))
 	mux.Handle("POST /api/login", rest.NewLoginHandler(log, auth))
+	mux.Handle("POST /api/register", rest.NewRegisterHandler(log, userDB))
 	mux.Handle("POST /api/db/update", middleware.Auth(rest.NewUpdateHandler(log, updateClient), auth))
 	mux.Handle("GET /api/db/stats", rest.NewUpdateStatsHandler(log, updateClient))
 	mux.Handle("GET /api/db/status", rest.NewUpdateStatusHandler(log, updateClient))

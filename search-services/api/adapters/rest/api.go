@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"context"
 
 	"github.com/VictoriaMetrics/metrics"
 	"yadro.com/course/api/core"
@@ -33,6 +34,33 @@ func NewPingHandler(log *slog.Logger, pingers map[string]core.Pinger) http.Handl
 
 type Authenticator interface {
 	Login(user, password string) (string, error)
+}
+
+type UserRegistrar interface {
+	CreateUser(ctx context.Context, username, password string) error
+}
+
+func NewRegisterHandler(log *slog.Logger, storage UserRegistrar) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Name     string `json:"name"`
+			Password string `json:"password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+		if req.Name == "" || req.Password == "" {
+			http.Error(w, "name and password are required", http.StatusBadRequest)
+			return
+		}
+		if err := storage.CreateUser(r.Context(), req.Name, req.Password); err != nil {
+			log.Error("register failed", "error", err)
+			http.Error(w, "user already exists or internal error", http.StatusConflict)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+	}
 }
 
 func NewLoginHandler(log *slog.Logger, auth Authenticator) http.HandlerFunc {

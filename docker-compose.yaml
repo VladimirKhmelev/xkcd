@@ -39,10 +39,12 @@ services:
       - SEARCH_ADDRESS=search:8080
       - SEARCH_CONCURRENCY=10
       - SEARCH_RATE=100
+      - DB_ADDRESS=postgres://postgres:password@postgres:5432/postgres
     depends_on:
       - words
       - update
       - search
+      - postgres
 
   words:
     image: words:latest

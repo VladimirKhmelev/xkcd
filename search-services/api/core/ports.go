@@ -10,6 +10,11 @@ type Pinger interface {
 	Ping(context.Context) error
 }
 
+type UserStorage interface {
+	CreateUser(ctx context.Context, username, password string) error
+	GetPassword(ctx context.Context, username string) (string, error)
+}
+
 type Updater interface {
 	Update(context.Context) error
 	Stats(context.Context) (UpdateStats, error)
