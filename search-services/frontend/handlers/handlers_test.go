@@ -106,6 +106,7 @@ func TestSearchPage_APIError(t *testing.T) {
 
 	h := newHandler(t, api.URL)
 	r := httptest.NewRequest(http.MethodGet, "/?phrase=linux", nil)
+	r.AddCookie(&http.Cookie{Name: "user_token", Value: "sometoken"})
 	w := httptest.NewRecorder()
 
 	h.SearchPage(w, r)
