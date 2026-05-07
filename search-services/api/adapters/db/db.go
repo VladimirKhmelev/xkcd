@@ -11,9 +11,9 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"golang.org/x/crypto/bcrypt"
 )
 
-//go:embed migrations/*.sql
 var migrationFiles embed.FS
 
 type DB struct {
@@ -53,9 +53,13 @@ func (db *DB) Migrate() error {
 }
 
 func (db *DB) CreateUser(ctx context.Context, username, password string) error {
-	_, err := db.conn.ExecContext(ctx,
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("hash password: %w", err)
+	}
+	_, err = db.conn.ExecContext(ctx,
 		`INSERT INTO users (username, password) VALUES ($1, $2)`,
-		username, password,
+		username, string(hash),
 	)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
@@ -63,14 +67,17 @@ func (db *DB) CreateUser(ctx context.Context, username, password string) error {
 	return nil
 }
 
-func (db *DB) GetPassword(ctx context.Context, username string) (string, error) {
-	var password string
+func (db *DB) CheckPassword(ctx context.Context, username, password string) error {
+	var hash string
 	err := db.conn.QueryRowContext(ctx,
 		`SELECT password FROM users WHERE username = $1`,
 		username,
-	).Scan(&password)
+	).Scan(&hash)
 	if err != nil {
-		return "", fmt.Errorf("get password: %w", err)
+		return fmt.Errorf("user not found: %w", err)
 	}
-	return password, nil
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
+		return fmt.Errorf("invalid password")
+	}
+	return nil
 }

@@ -12,7 +12,7 @@ type Pinger interface {
 
 type UserStorage interface {
 	CreateUser(ctx context.Context, username, password string) error
-	GetPassword(ctx context.Context, username string) (string, error)
+	CheckPassword(ctx context.Context, username, password string) error
 }
 
 type Updater interface {

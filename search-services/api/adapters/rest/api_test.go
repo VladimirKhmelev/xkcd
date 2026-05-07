@@ -34,6 +34,9 @@ type mockAuth struct {
 }
 
 func (m *mockAuth) Login(_, _ string) (string, error) { return m.token, m.err }
+func (m *mockAuth) LoginFromDB(_, _ string, _ func(string, string) error) (string, error) {
+	return m.token, m.err
+}
 
 // Имитирует сервис обновления базы комиксов
 type mockUpdater struct {

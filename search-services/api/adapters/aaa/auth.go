@@ -51,6 +51,19 @@ func (a AAA) Login(name, password string) (string, error) {
 	return token.SignedString([]byte(secretKey))
 }
 
+const userRole = "user"
+
+func (a AAA) LoginFromDB(name, password string, checkPassword func(name, password string) error) (string, error) {
+	if err := checkPassword(name, password); err != nil {
+		return "", fmt.Errorf("invalid credentials")
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		Subject:   userRole,
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(a.tokenTTL)),
+	})
+	return token.SignedString([]byte(secretKey))
+}
+
 func (a AAA) Verify(tokenString string) error {
 	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {

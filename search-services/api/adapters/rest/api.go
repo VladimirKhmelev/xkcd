@@ -34,6 +34,11 @@ func NewPingHandler(log *slog.Logger, pingers map[string]core.Pinger) http.Handl
 
 type Authenticator interface {
 	Login(user, password string) (string, error)
+	LoginFromDB(name, password string, checkPassword func(name, password string) error) (string, error)
+}
+
+type UserChecker interface {
+	CheckPassword(ctx context.Context, username, password string) error
 }
 
 type UserRegistrar interface {
@@ -60,6 +65,31 @@ func NewRegisterHandler(log *slog.Logger, storage UserRegistrar) http.HandlerFun
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
+	}
+}
+
+func NewUserLoginHandler(log *slog.Logger, auth Authenticator, checker UserChecker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Name     string `json:"name"`
+			Password string `json:"password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+		token, err := auth.LoginFromDB(req.Name, req.Password, func(name, password string) error {
+			return checker.CheckPassword(r.Context(), name, password)
+		})
+		if err != nil {
+			log.Error("user login failed", "error", err)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		if _, err := w.Write([]byte(token)); err != nil {
+			log.Error("failed to write token", "error", err)
+		}
 	}
 }
 

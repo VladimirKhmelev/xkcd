@@ -77,6 +77,7 @@ func main() {
 	}))
 	mux.Handle("POST /api/login", rest.NewLoginHandler(log, auth))
 	mux.Handle("POST /api/register", rest.NewRegisterHandler(log, userDB))
+	mux.Handle("POST /api/user/login", rest.NewUserLoginHandler(log, auth, userDB))
 	mux.Handle("POST /api/db/update", middleware.Auth(rest.NewUpdateHandler(log, updateClient), auth))
 	mux.Handle("GET /api/db/stats", rest.NewUpdateStatsHandler(log, updateClient))
 	mux.Handle("GET /api/db/status", rest.NewUpdateStatusHandler(log, updateClient))
