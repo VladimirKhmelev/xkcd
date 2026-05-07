@@ -65,6 +65,14 @@ func (a AAA) LoginFromDB(name, password string, checkPassword func(name, passwor
 }
 
 func (a AAA) Verify(tokenString string) error {
+	return a.verifyRoles(tokenString, adminRole)
+}
+
+func (a AAA) VerifyAny(tokenString string) error {
+	return a.verifyRoles(tokenString, adminRole, userRole)
+}
+
+func (a AAA) verifyRoles(tokenString string, roles ...string) error {
 	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
@@ -79,8 +87,10 @@ func (a AAA) Verify(tokenString string) error {
 	if !ok || !token.Valid {
 		return fmt.Errorf("invalid token claims")
 	}
-	if claims.Subject != adminRole {
-		return fmt.Errorf("insufficient permissions")
+	for _, role := range roles {
+		if claims.Subject == role {
+			return nil
+		}
 	}
-	return nil
+	return fmt.Errorf("insufficient permissions")
 }

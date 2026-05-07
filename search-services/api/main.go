@@ -82,8 +82,8 @@ func main() {
 	mux.Handle("GET /api/db/stats", rest.NewUpdateStatsHandler(log, updateClient))
 	mux.Handle("GET /api/db/status", rest.NewUpdateStatusHandler(log, updateClient))
 	mux.Handle("DELETE /api/db", middleware.Auth(rest.NewDropHandler(log, updateClient), auth))
-	mux.Handle("GET /api/search", middleware.Concurrency(rest.NewSearchHandler(log, searchClient), cfg.SearchConcurrency))
-	mux.Handle("GET /api/isearch", middleware.Rate(rest.NewSearchIndexHandler(log, searchClient), cfg.SearchRate))
+	mux.Handle("GET /api/search", middleware.Auth(middleware.Concurrency(rest.NewSearchHandler(log, searchClient), cfg.SearchConcurrency), anyVerifier{auth}))
+	mux.Handle("GET /api/isearch", middleware.Auth(middleware.Rate(rest.NewSearchIndexHandler(log, searchClient), cfg.SearchRate), anyVerifier{auth}))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -111,6 +111,10 @@ func main() {
 		}
 	}
 }
+
+type anyVerifier struct { a aaa.AAA }
+
+func (v anyVerifier) Verify(token string) error { return v.a.VerifyAny(token) }
 
 func mustMakeLogger(logLevel string) *slog.Logger {
 	var level slog.Level

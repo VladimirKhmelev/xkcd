@@ -9,7 +9,16 @@
 <body>
 <header>
   <h1>XKCD Search</h1>
-  <a href="/admin">Admin Panel</a>
+  <nav>
+    {{if .LoggedIn}}
+    <form method="POST" action="/logout" style="display:inline">
+      <button type="submit" class="btn">Log out</button>
+    </form>
+    {{else}}
+    <a href="/login">Log in</a> &nbsp; <a href="/register">Register</a>
+    {{end}}
+    <a href="/admin">Admin Panel</a>
+  </nav>
 </header>
 <main>
   <div class="card">

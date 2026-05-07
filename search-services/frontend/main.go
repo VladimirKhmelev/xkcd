@@ -36,6 +36,11 @@ func main() {
 	mux.HandleFunc("POST /admin/logout", h.Logout)
 	mux.HandleFunc("POST /admin/update", h.Update)
 	mux.HandleFunc("POST /admin/drop", h.Drop)
+	mux.HandleFunc("GET /register", h.RegisterPage)
+	mux.HandleFunc("POST /register", h.Register)
+	mux.HandleFunc("GET /login", h.UserLoginPage)
+	mux.HandleFunc("POST /login", h.UserLogin)
+	mux.HandleFunc("POST /logout", h.UserLogout)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

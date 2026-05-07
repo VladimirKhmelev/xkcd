@@ -18,7 +18,7 @@ RUN cd /src && \
 
 
 ENV CGO_ENABLED=0
-RUN cd /src && go build -o /api api/main.go
+RUN cd /src && go build -o /api ./api
 
 FROM alpine:3.20
 

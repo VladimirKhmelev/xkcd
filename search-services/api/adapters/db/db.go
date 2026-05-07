@@ -14,6 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//go:embed migrations/*.sql
 var migrationFiles embed.FS
 
 type DB struct {
@@ -36,7 +37,7 @@ func (db *DB) Migrate() error {
 	if err != nil {
 		return err
 	}
-	driver, err := pgx.WithInstance(db.conn.DB, &pgx.Config{})
+	driver, err := pgx.WithInstance(db.conn.DB, &pgx.Config{MigrationsTable: "api_schema_migrations"})
 	if err != nil {
 		return err
 	}

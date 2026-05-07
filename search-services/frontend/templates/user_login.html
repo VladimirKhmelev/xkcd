@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — XKCD Search</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<header>
+  <h1>XKCD Search</h1>
+  <a href="/">Search</a>
+</header>
+<main>
+  <div class="card" style="max-width:400px;margin:40px auto">
+    <h2>Log in</h2>
+    {{if .Message}}
+    <div class="alert">{{.Message}}</div>
+    {{end}}
+    {{if .Error}}
+    <div class="alert alert-error">{{.Error}}</div>
+    {{end}}
+    <form method="POST" action="/login">
+      <div style="margin-bottom:12px">
+        <input type="text" name="name" placeholder="Username" required style="width:100%">
+      </div>
+      <div style="margin-bottom:12px">
+        <input type="password" name="password" placeholder="Password" required style="width:100%">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%">Log in</button>
+    </form>
+    <p style="margin-top:16px;text-align:center">No account? <a href="/register">Register</a></p>
+  </div>
+</main>
+</body>
+</html>

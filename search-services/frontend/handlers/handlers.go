@@ -40,18 +40,24 @@ func (h *Handler) SearchPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	token := h.getUserToken(r)
 	data := map[string]any{
-		"Phrase": phrase,
-		"Limit":  limit,
+		"Phrase":   phrase,
+		"Limit":    limit,
+		"LoggedIn": token != "",
 	}
 
 	if phrase != "" {
-		comics, total, err := h.search(r, phrase, limit)
-		if err != nil {
-			data["Error"] = err.Error()
+		if token == "" {
+			data["Error"] = "Please log in to search"
 		} else {
-			data["Comics"] = comics
-			data["Total"] = total
+			comics, total, err := h.search(r, phrase, limit, token)
+			if err != nil {
+				data["Error"] = err.Error()
+			} else {
+				data["Comics"] = comics
+				data["Total"] = total
+			}
 		}
 	}
 
@@ -188,9 +194,10 @@ type comicsItem struct {
 	URL string `json:"url"`
 }
 
-func (h *Handler) search(r *http.Request, phrase string, limit int) ([]comicsItem, int, error) {
+func (h *Handler) search(r *http.Request, phrase string, limit int, token string) ([]comicsItem, int, error) {
 	apiURL := fmt.Sprintf("%s/api/search?phrase=%s&limit=%d", h.apiAddress, url.QueryEscape(phrase), limit)
 	req, _ := http.NewRequestWithContext(r.Context(), http.MethodGet, apiURL, nil)
+	req.Header.Set("Authorization", "Token "+token)
 	resp, err := h.httpClient.Do(req)
 	if err != nil {
 		return nil, 0, fmt.Errorf("search request failed: %w", err)
@@ -262,6 +269,82 @@ func (h *Handler) getStatus(r *http.Request, token string) (string, error) {
 		return "", err
 	}
 	return result.Status, nil
+}
+
+func (h *Handler) RegisterPage(w http.ResponseWriter, r *http.Request) {
+	h.render(w, "register.html", map[string]any{})
+}
+
+func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+	password := r.FormValue("password")
+
+	body, _ := json.Marshal(map[string]string{"name": name, "password": password})
+	resp, err := h.httpClient.Post(h.apiAddress+"/api/register", "application/json", bytes.NewReader(body))
+	if err != nil {
+		h.render(w, "register.html", map[string]any{"Error": "Registration failed: " + err.Error()})
+		return
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusCreated {
+		h.render(w, "register.html", map[string]any{"Error": "User already exists"})
+		return
+	}
+	http.Redirect(w, r, "/login?msg="+url.QueryEscape("Registered successfully, please log in"), http.StatusSeeOther)
+}
+
+func (h *Handler) UserLoginPage(w http.ResponseWriter, r *http.Request) {
+	data := map[string]any{}
+	if msg := r.URL.Query().Get("msg"); msg != "" {
+		data["Message"] = msg
+	}
+	h.render(w, "user_login.html", data)
+}
+
+func (h *Handler) UserLogin(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+	password := r.FormValue("password")
+
+	body, _ := json.Marshal(map[string]string{"name": name, "password": password})
+	resp, err := h.httpClient.Post(h.apiAddress+"/api/user/login", "application/json", bytes.NewReader(body))
+	if err != nil {
+		h.render(w, "user_login.html", map[string]any{"Error": "Login failed: " + err.Error()})
+		return
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		h.render(w, "user_login.html", map[string]any{"Error": "Invalid credentials"})
+		return
+	}
+	token, _ := io.ReadAll(resp.Body)
+	http.SetCookie(w, &http.Cookie{
+		Name:     "user_token",
+		Value:    strings.TrimSpace(string(token)),
+		Path:     "/",
+		HttpOnly: true,
+	})
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (h *Handler) UserLogout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:    "user_token",
+		Value:   "",
+		Path:    "/",
+		MaxAge:  -1,
+		Expires: time.Unix(0, 0),
+	})
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+func (h *Handler) getUserToken(r *http.Request) string {
+	c, err := r.Cookie("user_token")
+	if err != nil {
+		return ""
+	}
+	return c.Value
 }
 
 func (h *Handler) getToken(r *http.Request) string {
