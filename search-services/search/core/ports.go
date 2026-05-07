@@ -23,3 +23,9 @@ type DB interface {
 type Words interface {
 	Norm(ctx context.Context, phrase string) ([]string, error)
 }
+
+type Cache interface {
+	Get(ctx context.Context, key string) ([]Comics, bool, error)
+	Set(ctx context.Context, key string, comics []Comics) error
+	Flush(ctx context.Context) error
+}

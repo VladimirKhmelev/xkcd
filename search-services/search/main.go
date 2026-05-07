@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	searchpb "yadro.com/course/proto/search"
 	"yadro.com/course/search/adapters/broker"
+	"yadro.com/course/search/adapters/cache"
 	"yadro.com/course/search/adapters/db"
 	searchgrpc "yadro.com/course/search/adapters/grpc"
 	"yadro.com/course/search/adapters/initiator"
@@ -48,7 +49,12 @@ func run(cfg config.Config, log *slog.Logger) error {
 		return fmt.Errorf("failed to create words client: %w", err)
 	}
 
-	service := core.NewService(log, storage, wordsClient)
+	redisCache, err := cache.New(cfg.RedisAddress)
+	if err != nil {
+		return fmt.Errorf("failed to connect to redis: %w", err)
+	}
+
+	service := core.NewService(log, storage, wordsClient, redisCache)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

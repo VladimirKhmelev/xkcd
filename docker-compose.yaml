@@ -103,12 +103,15 @@ services:
       - WORDS_ADDRESS=words:8080
       - INDEX_TTL=24h
       - BROKER_ADDRESS=nats://nats:4222
+      - REDIS_ADDRESS=redis:6379
     depends_on:
       postgres:
         condition: service_healthy
       words:
         condition: service_started
       nats:
+        condition: service_started
+      redis:
         condition: service_started
 
   tests:
@@ -181,6 +184,13 @@ services:
     volumes:
       - grafanadata:/var/lib/grafana
     restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres:

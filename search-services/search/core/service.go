@@ -12,16 +12,18 @@ type Service struct {
 	log   *slog.Logger
 	db    DB
 	words Words
+	cache Cache
 
 	mu    sync.RWMutex
 	index map[string][]Comics
 }
 
-func NewService(log *slog.Logger, db DB, words Words) *Service {
+func NewService(log *slog.Logger, db DB, words Words, cache Cache) *Service {
 	return &Service{
 		log:   log,
 		db:    db,
 		words: words,
+		cache: cache,
 		index: make(map[string][]Comics),
 	}
 }
@@ -34,13 +36,30 @@ func (s *Service) Search(ctx context.Context, phrase string, limit int) ([]Comic
 	if len(keywords) == 0 {
 		return []Comics{}, nil
 	}
-	return s.db.Search(ctx, keywords, limit)
+
+	cacheKey := fmt.Sprintf("search:%s:%d", phrase, limit)
+	if cached, ok, err := s.cache.Get(ctx, cacheKey); err == nil && ok {
+		s.log.Debug("cache hit", "key", cacheKey)
+		return cached, nil
+	}
+
+	comics, err := s.db.Search(ctx, keywords, limit)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.cache.Set(ctx, cacheKey, comics); err != nil {
+		s.log.Warn("cache set failed", "error", err)
+	}
+	return comics, nil
 }
 
 func (s *Service) ResetIndex() {
 	s.mu.Lock()
 	s.index = make(map[string][]Comics)
 	s.mu.Unlock()
+	if err := s.cache.Flush(context.Background()); err != nil {
+		s.log.Warn("cache flush failed", "error", err)
+	}
 	s.log.Info("index reset")
 }
 

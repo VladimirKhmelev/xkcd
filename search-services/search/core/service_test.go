@@ -36,9 +36,17 @@ func (m *mockWords) Norm(_ context.Context, _ string) ([]string, error) {
 	return m.result, m.err
 }
 
-// Gустые ключевые слова после нормализации — возвращаем пустой результат без запроса к БД
+type mockCache struct{}
+
+func (m *mockCache) Get(_ context.Context, _ string) ([]core.Comics, bool, error) {
+	return nil, false, nil
+}
+func (m *mockCache) Set(_ context.Context, _ string, _ []core.Comics) error { return nil }
+func (m *mockCache) Flush(_ context.Context) error                          { return nil }
+
+// Пустые ключевые слова после нормализации — возвращаем пустой результат без запроса к БД
 func TestSearch_EmptyKeywords(t *testing.T) {
-	svc := core.NewService(testLog, &mockDB{}, &mockWords{result: nil})
+	svc := core.NewService(testLog, &mockDB{}, &mockWords{result: nil}, &mockCache{})
 	result, err := svc.Search(context.Background(), "the an", 10)
 	require.NoError(t, err)
 	require.Empty(t, result)
@@ -47,7 +55,7 @@ func TestSearch_EmptyKeywords(t *testing.T) {
 // Нрмальный поиск возвращает то что пришло из БД
 func TestSearch_ReturnsDBResults(t *testing.T) {
 	expected := []core.Comics{{ID: 1, URL: "url1"}, {ID: 2, URL: "url2"}}
-	svc := core.NewService(testLog, &mockDB{searchResult: expected}, &mockWords{result: []string{"linux"}})
+	svc := core.NewService(testLog, &mockDB{searchResult: expected}, &mockWords{result: []string{"linux"}}, &mockCache{})
 	result, err := svc.Search(context.Background(), "linux", 10)
 	require.NoError(t, err)
 	require.Equal(t, expected, result)
@@ -55,14 +63,14 @@ func TestSearch_ReturnsDBResults(t *testing.T) {
 
 // Ошибка нормализации пробрасывается наружу
 func TestSearch_WordsError(t *testing.T) {
-	svc := core.NewService(testLog, &mockDB{}, &mockWords{err: errors.New("words down")})
+	svc := core.NewService(testLog, &mockDB{}, &mockWords{err: errors.New("words down")}, &mockCache{})
 	_, err := svc.Search(context.Background(), "linux", 10)
 	require.Error(t, err)
 }
 
 // Ошибка БД пробрасывается наружу
 func TestSearch_DBError(t *testing.T) {
-	svc := core.NewService(testLog, &mockDB{searchErr: errors.New("db down")}, &mockWords{result: []string{"linux"}})
+	svc := core.NewService(testLog, &mockDB{searchErr: errors.New("db down")}, &mockWords{result: []string{"linux"}}, &mockCache{})
 	_, err := svc.Search(context.Background(), "linux", 10)
 	require.Error(t, err)
 }
@@ -74,7 +82,7 @@ func TestBuildIndex_AndISearch(t *testing.T) {
 		{ID: 2, URL: "url2", Keywords: []string{"linux", "windows"}},
 		{ID: 3, URL: "url3", Keywords: []string{"macos"}},
 	}
-	svc := core.NewService(testLog, &mockDB{allComics: comics}, &mockWords{result: []string{"linux"}})
+	svc := core.NewService(testLog, &mockDB{allComics: comics}, &mockWords{result: []string{"linux"}}, &mockCache{})
 	require.NoError(t, svc.BuildIndex(context.Background()))
 
 	result, err := svc.ISearch(context.Background(), "linux", 10)
@@ -89,7 +97,7 @@ func TestISearch_LimitApplied(t *testing.T) {
 		{ID: 2, URL: "u2", Keywords: []string{"linux"}},
 		{ID: 3, URL: "u3", Keywords: []string{"linux"}},
 	}
-	svc := core.NewService(testLog, &mockDB{allComics: comics}, &mockWords{result: []string{"linux"}})
+	svc := core.NewService(testLog, &mockDB{allComics: comics}, &mockWords{result: []string{"linux"}}, &mockCache{})
 	require.NoError(t, svc.BuildIndex(context.Background()))
 
 	result, err := svc.ISearch(context.Background(), "linux", 2)
@@ -103,7 +111,7 @@ func TestISearch_SortedByScore(t *testing.T) {
 		{ID: 1, URL: "u1", Keywords: []string{"linux"}},
 		{ID: 2, URL: "u2", Keywords: []string{"linux", "kernel"}},
 	}
-	svc := core.NewService(testLog, &mockDB{allComics: comics}, &mockWords{result: []string{"linux", "kernel"}})
+	svc := core.NewService(testLog, &mockDB{allComics: comics}, &mockWords{result: []string{"linux", "kernel"}}, &mockCache{})
 	require.NoError(t, svc.BuildIndex(context.Background()))
 
 	result, err := svc.ISearch(context.Background(), "linux kernel", 10)
@@ -117,7 +125,7 @@ func TestResetIndex_ClearsResults(t *testing.T) {
 	comics := []core.IndexComic{
 		{ID: 1, URL: "u1", Keywords: []string{"linux"}},
 	}
-	svc := core.NewService(testLog, &mockDB{allComics: comics}, &mockWords{result: []string{"linux"}})
+	svc := core.NewService(testLog, &mockDB{allComics: comics}, &mockWords{result: []string{"linux"}}, &mockCache{})
 	require.NoError(t, svc.BuildIndex(context.Background()))
 
 	svc.ResetIndex()
@@ -129,7 +137,7 @@ func TestResetIndex_ClearsResults(t *testing.T) {
 
 // Пустые ключевые слова в isearch — возвращаем пустой результат
 func TestISearch_EmptyKeywords(t *testing.T) {
-	svc := core.NewService(testLog, &mockDB{}, &mockWords{result: nil})
+	svc := core.NewService(testLog, &mockDB{}, &mockWords{result: nil}, &mockCache{})
 	result, err := svc.ISearch(context.Background(), "", 10)
 	require.NoError(t, err)
 	require.Empty(t, result)
@@ -137,14 +145,14 @@ func TestISearch_EmptyKeywords(t *testing.T) {
 
 // Ошибка нормализации в isearch пробрасывается наружу
 func TestISearch_WordsError(t *testing.T) {
-	svc := core.NewService(testLog, &mockDB{}, &mockWords{err: errors.New("words down")})
+	svc := core.NewService(testLog, &mockDB{}, &mockWords{err: errors.New("words down")}, &mockCache{})
 	_, err := svc.ISearch(context.Background(), "linux", 10)
 	require.Error(t, err)
 }
 
 // Ошибка при построении индекса пробрасывается наружу
 func TestBuildIndex_DBError(t *testing.T) {
-	svc := core.NewService(testLog, &mockDB{allErr: errors.New("db down")}, &mockWords{})
+	svc := core.NewService(testLog, &mockDB{allErr: errors.New("db down")}, &mockWords{}, &mockCache{})
 	err := svc.BuildIndex(context.Background())
 	require.Error(t, err)
 }
