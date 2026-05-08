@@ -29,3 +29,7 @@ type Cache interface {
 	Set(ctx context.Context, key string, comics []Comics) error
 	Flush(ctx context.Context) error
 }
+
+type CacheFlusher interface {
+	Flush(ctx context.Context) error
+}

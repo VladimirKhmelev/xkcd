@@ -14,19 +14,20 @@ const (
 )
 
 type Subscriber struct {
-	log     *slog.Logger
-	nc      *nats.Conn
-	builder core.IndexBuilder
+	log      *slog.Logger
+	nc       *nats.Conn
+	builder  core.IndexBuilder
 	resetter core.IndexResetter
+	cache    core.CacheFlusher
 }
 
-func New(address string, log *slog.Logger, builder core.IndexBuilder, resetter core.IndexResetter) (*Subscriber, error) {
+func New(address string, log *slog.Logger, builder core.IndexBuilder, resetter core.IndexResetter, cache core.CacheFlusher) (*Subscriber, error) {
 	nc, err := nats.Connect(address)
 	if err != nil {
 		return nil, err
 	}
 	log.Info("connected to broker", "address", address)
-	return &Subscriber{log: log, nc: nc, builder: builder, resetter: resetter}, nil
+	return &Subscriber{log: log, nc: nc, builder: builder, resetter: resetter, cache: cache}, nil
 }
 
 func (s *Subscriber) Run(ctx context.Context) {
@@ -58,6 +59,9 @@ func (s *Subscriber) Run(ctx context.Context) {
 			return
 		case <-updatedCh:
 			s.log.Info("received db updated event, rebuilding index")
+			if err := s.cache.Flush(ctx); err != nil {
+				s.log.Warn("failed to flush cache on update", "error", err)
+			}
 			if err := s.builder.BuildIndex(ctx); err != nil {
 				s.log.Error("failed to rebuild index after update", "error", err)
 			}

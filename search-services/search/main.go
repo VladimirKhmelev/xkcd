@@ -59,7 +59,7 @@ func run(cfg config.Config, log *slog.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	sub, err := broker.New(cfg.BrokerAddress, log, service, service)
+	sub, err := broker.New(cfg.BrokerAddress, log, service, service, redisCache)
 	if err != nil {
 		return fmt.Errorf("failed to connect to broker: %w", err)
 	}
