@@ -34,8 +34,8 @@ jobs:
 
       - name: Build swagger UI
         run: |
-          curl -sL https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js -o public/swagger/swagger-ui-bundle.js
-          curl -sL https://unpkg.com/swagger-ui-dist/swagger-ui.css -o public/swagger/swagger-ui.css
+          curl -sL https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui-bundle.js -o public/swagger/swagger-ui-bundle.js
+          curl -sL https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui.css -o public/swagger/swagger-ui.css
           cat > public/swagger/index.html << 'EOF'
           <!DOCTYPE html>
           <html lang="en">
@@ -48,7 +48,7 @@ jobs:
           <div id="swagger-ui"></div>
           <script src="swagger-ui-bundle.js"></script>
           <script>
-            SwaggerUIBundle({ url: "swagger.json", dom_id: "#swagger-ui", presets: [SwaggerUIBundle.presets.apis] })
+            SwaggerUIBundle({ url: "swagger.json", dom_id: "#swagger-ui", presets: [SwaggerUIBundle.presets.apis], defaultModelsExpandDepth: 1, docExpansion: "list" })
           </script>
           </body>
           </html>
