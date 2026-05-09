@@ -3,6 +3,9 @@
 [![CI](https://github.com/VladimirKhmelev/xkcd/actions/workflows/ci.yml/badge.svg)](https://github.com/VladimirKhmelev/xkcd/actions/workflows/ci.yml)
 [![Swagger](https://img.shields.io/badge/API-Swagger-green)](https://vladimirkhmelev.github.io/xkcd/swagger/)
 [![Coverage](https://img.shields.io/badge/Coverage-Report-blue)](https://vladimirkhmelev.github.io/xkcd/coverage/cover.html)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://go.dev/)
+[![License](https://img.shields.io/github/license/VladimirKhmelev/xkcd)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-linux-lightgrey)](https://github.com/VladimirKhmelev/xkcd)
 
 Микросервисная система для поиска комиксов [xkcd.com](https://xkcd.com) по фразе.
 
