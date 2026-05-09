@@ -87,41 +87,43 @@
 				
 				<option value="file15">yadro.com/course/frontend/main.go (0.0%)</option>
 				
-				<option value="file16">yadro.com/course/search/adapters/broker/broker.go (0.0%)</option>
+				<option value="file16">yadro.com/course/pkg/tracing/tracing.go (0.0%)</option>
 				
-				<option value="file17">yadro.com/course/search/adapters/cache/noop.go (0.0%)</option>
+				<option value="file17">yadro.com/course/search/adapters/broker/broker.go (0.0%)</option>
 				
-				<option value="file18">yadro.com/course/search/adapters/cache/redis.go (0.0%)</option>
+				<option value="file18">yadro.com/course/search/adapters/cache/noop.go (0.0%)</option>
 				
-				<option value="file19">yadro.com/course/search/adapters/db/storage.go (0.0%)</option>
+				<option value="file19">yadro.com/course/search/adapters/cache/redis.go (0.0%)</option>
 				
-				<option value="file20">yadro.com/course/search/adapters/grpc/server.go (100.0%)</option>
+				<option value="file20">yadro.com/course/search/adapters/db/storage.go (0.0%)</option>
 				
-				<option value="file21">yadro.com/course/search/adapters/initiator/initiator.go (100.0%)</option>
+				<option value="file21">yadro.com/course/search/adapters/grpc/server.go (100.0%)</option>
 				
-				<option value="file22">yadro.com/course/search/adapters/words/words.go (55.6%)</option>
+				<option value="file22">yadro.com/course/search/adapters/initiator/initiator.go (100.0%)</option>
 				
-				<option value="file23">yadro.com/course/search/config/config.go (66.7%)</option>
+				<option value="file23">yadro.com/course/search/adapters/words/words.go (55.6%)</option>
 				
-				<option value="file24">yadro.com/course/search/core/service.go (93.3%)</option>
+				<option value="file24">yadro.com/course/search/config/config.go (66.7%)</option>
 				
-				<option value="file25">yadro.com/course/update/adapters/broker/broker.go (0.0%)</option>
+				<option value="file25">yadro.com/course/search/core/service.go (93.3%)</option>
 				
-				<option value="file26">yadro.com/course/update/adapters/db/migrations.go (0.0%)</option>
+				<option value="file26">yadro.com/course/update/adapters/broker/broker.go (0.0%)</option>
 				
-				<option value="file27">yadro.com/course/update/adapters/db/storage.go (0.0%)</option>
+				<option value="file27">yadro.com/course/update/adapters/db/migrations.go (0.0%)</option>
 				
-				<option value="file28">yadro.com/course/update/adapters/grpc/server.go (95.5%)</option>
+				<option value="file28">yadro.com/course/update/adapters/db/storage.go (0.0%)</option>
 				
-				<option value="file29">yadro.com/course/update/adapters/words/words.go (63.6%)</option>
+				<option value="file29">yadro.com/course/update/adapters/grpc/server.go (95.5%)</option>
 				
-				<option value="file30">yadro.com/course/update/adapters/xkcd/xkcd.go (78.4%)</option>
+				<option value="file30">yadro.com/course/update/adapters/words/words.go (63.6%)</option>
 				
-				<option value="file31">yadro.com/course/update/config/config.go (80.0%)</option>
+				<option value="file31">yadro.com/course/update/adapters/xkcd/xkcd.go (78.4%)</option>
 				
-				<option value="file32">yadro.com/course/update/core/service.go (79.7%)</option>
+				<option value="file32">yadro.com/course/update/config/config.go (80.0%)</option>
 				
-				<option value="file33">yadro.com/course/words/words/words.go (100.0%)</option>
+				<option value="file33">yadro.com/course/update/core/service.go (79.7%)</option>
+				
+				<option value="file34">yadro.com/course/words/words/words.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -848,6 +850,7 @@ import (
         "context"
         "log/slog"
 
+        "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
         "google.golang.org/grpc"
         "google.golang.org/grpc/credentials/insecure"
         "google.golang.org/protobuf/types/known/emptypb"
@@ -861,7 +864,10 @@ type Client struct {
 }
 
 func NewClient(address string, log *slog.Logger) (*Client, error) <span class="cov4" title="2">{
-        conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+        conn, err := grpc.NewClient(address,
+                grpc.WithTransportCredentials(insecure.NewCredentials()),
+                grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+        )
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
@@ -918,6 +924,7 @@ import (
         "errors"
         "log/slog"
 
+        "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
         "google.golang.org/grpc"
         "google.golang.org/grpc/codes"
         "google.golang.org/grpc/credentials/insecure"
@@ -933,7 +940,10 @@ type Client struct {
 }
 
 func NewClient(address string, log *slog.Logger) (*Client, error) <span class="cov0" title="0">{
-        conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+        conn, err := grpc.NewClient(address,
+                grpc.WithTransportCredentials(insecure.NewCredentials()),
+                grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+        )
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
@@ -1003,6 +1013,7 @@ import (
         "context"
         "log/slog"
 
+        "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
         "google.golang.org/grpc"
         "google.golang.org/grpc/credentials/insecure"
         "google.golang.org/protobuf/types/known/emptypb"
@@ -1015,7 +1026,10 @@ type Client struct {
 }
 
 func NewClient(address string, log *slog.Logger) (*Client, error) <span class="cov0" title="0">{
-        conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+        conn, err := grpc.NewClient(address,
+                grpc.WithTransportCredentials(insecure.NewCredentials()),
+                grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+        )
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
@@ -1067,6 +1081,7 @@ type Config struct {
         SearchAddress     string        `yaml:"search_address" env:"SEARCH_ADDRESS" env-default:"search:83"`
         TokenTTL          time.Duration `yaml:"token_ttl" env:"TOKEN_TTL" env-default:"24h"`
         DBAddress         string        `yaml:"db_address" env:"DB_ADDRESS" env-default:""`
+        OTLPEndpoint      string        `yaml:"otlp_endpoint" env:"OTLP_ENDPOINT" env-default:""`
 }
 
 func MustLoad(configPath string) Config <span class="cov10" title="2">{
@@ -2047,7 +2062,45 @@ func mustMakeLogger(logLevel string) *slog.Logger <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file16" style="display: none">package broker
+		<pre class="file" id="file16" style="display: none">package tracing
+
+import (
+        "context"
+        "fmt"
+
+        "go.opentelemetry.io/otel"
+        "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+        "go.opentelemetry.io/otel/propagation"
+        "go.opentelemetry.io/otel/sdk/resource"
+        sdktrace "go.opentelemetry.io/otel/sdk/trace"
+        semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+)
+
+func Init(ctx context.Context, serviceName, endpoint string) (func(context.Context) error, error) <span class="cov0" title="0">{
+        exp, err := otlptracegrpc.New(ctx,
+                otlptracegrpc.WithEndpoint(endpoint),
+                otlptracegrpc.WithInsecure(),
+        )
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("create otlp exporter: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">tp := sdktrace.NewTracerProvider(
+                sdktrace.WithBatcher(exp),
+                sdktrace.WithResource(resource.NewWithAttributes(
+                        semconv.SchemaURL,
+                        semconv.ServiceName(serviceName),
+                )),
+        )
+
+        otel.SetTracerProvider(tp)
+        otel.SetTextMapPropagator(propagation.TraceContext{})
+
+        return tp.Shutdown, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package broker
 
 import (
         "context"
@@ -2122,7 +2175,7 @@ func (s *Subscriber) Run(ctx context.Context) <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file17" style="display: none">package cache
+		<pre class="file" id="file18" style="display: none">package cache
 
 import (
         "context"
@@ -2137,7 +2190,7 @@ func (Noop) Set(_ context.Context, _ string, _ []core.Comics) error        <span
 func (Noop) Flush(_ context.Context) error                                 <span class="cov0" title="0">{ return nil }</span>
 </pre>
 		
-		<pre class="file" id="file18" style="display: none">package cache
+		<pre class="file" id="file19" style="display: none">package cache
 
 import (
         "context"
@@ -2195,7 +2248,7 @@ func (r *Redis) Flush(ctx context.Context) error <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file19" style="display: none">package db
+		<pre class="file" id="file20" style="display: none">package db
 
 import (
         "context"
@@ -2277,7 +2330,7 @@ func (db *DB) AllComics(ctx context.Context) ([]core.IndexComic, error) <span cl
 }
 </pre>
 		
-		<pre class="file" id="file20" style="display: none">package grpc
+		<pre class="file" id="file21" style="display: none">package grpc
 
 import (
         "context"
@@ -2333,7 +2386,7 @@ func (s *Server) ISearch(ctx context.Context, req *searchpb.SearchRequest) (*sea
 }
 </pre>
 		
-		<pre class="file" id="file21" style="display: none">package initiator
+		<pre class="file" id="file22" style="display: none">package initiator
 
 import (
         "context"
@@ -2375,7 +2428,7 @@ func (i *Initiator) build(ctx context.Context) <span class="cov10" title="6">{
 }
 </pre>
 		
-		<pre class="file" id="file22" style="display: none">package words
+		<pre class="file" id="file23" style="display: none">package words
 
 import (
         "context"
@@ -2415,7 +2468,7 @@ func (c *Client) Norm(ctx context.Context, phrase string) ([]string, error) <spa
 }
 </pre>
 		
-		<pre class="file" id="file23" style="display: none">package config
+		<pre class="file" id="file24" style="display: none">package config
 
 import (
         "log/slog"
@@ -2433,6 +2486,7 @@ type Config struct {
         IndexTTL      time.Duration `yaml:"index_ttl"      env:"INDEX_TTL"       env-default:"5m"`
         BrokerAddress string        `yaml:"broker_address" env:"BROKER_ADDRESS"  env-default:"nats://localhost:4222"`
         RedisAddress  string        `yaml:"redis_address"  env:"REDIS_ADDRESS"   env-default:"localhost:6379"`
+        OTLPEndpoint  string        `yaml:"otlp_endpoint"  env:"OTLP_ENDPOINT"   env-default:""`
 }
 
 func MustLoad(configPath string) Config <span class="cov10" title="2">{
@@ -2447,7 +2501,7 @@ func MustLoad(configPath string) Config <span class="cov10" title="2">{
 }
 </pre>
 		
-		<pre class="file" id="file24" style="display: none">package core
+		<pre class="file" id="file25" style="display: none">package core
 
 import (
         "context"
@@ -2572,7 +2626,7 @@ func (s *Service) ISearch(ctx context.Context, phrase string, limit int) ([]Comi
 }
 </pre>
 		
-		<pre class="file" id="file25" style="display: none">package broker
+		<pre class="file" id="file26" style="display: none">package broker
 
 import (
         "log/slog"
@@ -2626,7 +2680,7 @@ func (p *Publisher) Close() <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file26" style="display: none">package db
+		<pre class="file" id="file27" style="display: none">package db
 
 import (
         "embed"
@@ -2669,7 +2723,7 @@ func (db *DB) Migrate() error <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file27" style="display: none">package db
+		<pre class="file" id="file28" style="display: none">package db
 
 import (
         "context"
@@ -2744,7 +2798,7 @@ func (db *DB) Drop(ctx context.Context) error <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file28" style="display: none">package grpc
+		<pre class="file" id="file29" style="display: none">package grpc
 
 import (
         "context"
@@ -2816,7 +2870,7 @@ func (s *Server) Drop(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, er
 }
 </pre>
 		
-		<pre class="file" id="file29" style="display: none">package words
+		<pre class="file" id="file30" style="display: none">package words
 
 import (
         "context"
@@ -2862,7 +2916,7 @@ func (c Client) Ping(ctx context.Context) error <span class="cov4" title="2">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file30" style="display: none">package xkcd
+		<pre class="file" id="file31" style="display: none">package xkcd
 
 import (
         "context"
@@ -2969,7 +3023,7 @@ func (c Client) LastID(ctx context.Context) (int, error) <span class="cov4" titl
 }
 </pre>
 		
-		<pre class="file" id="file31" style="display: none">package config
+		<pre class="file" id="file32" style="display: none">package config
 
 import (
         "log"
@@ -3005,7 +3059,7 @@ func MustLoad(configPath string) Config <span class="cov10" title="2">{
 }
 </pre>
 		
-		<pre class="file" id="file32" style="display: none">package core
+		<pre class="file" id="file33" style="display: none">package core
 
 import (
         "context"
@@ -3157,7 +3211,7 @@ func (s *Service) Drop(ctx context.Context) error <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file33" style="display: none">package words
+		<pre class="file" id="file34" style="display: none">package words
 
 import (
         "strings"
