@@ -2,7 +2,7 @@
 
 Микросервисная система для поиска комиксов [xkcd.com](https://xkcd.com) по фразе.
 
-Комиксы загружаются из API xkcd, хранятся в PostgreSQL и индексируются для быстрого поиска. Индекс перестраивается автоматически через NATS при каждом обновлении базы.
+Комиксы загружаются из API xkcd, хранятся в PostgreSQL и индексируются для быстрого поиска. Индекс перестраивается автоматически через NATS при каждом обновлении базы. Результаты поиска кешируются в Redis.
 
 ## Архитектура
 
@@ -19,9 +19,9 @@
   ┌──────┐ ┌────────┐ ┌────────┐
   │words │ │ update │ │ search │  ← gRPC
   └──────┘ └───┬────┘ └───┬────┘
-               │    NATS   │
-               └─────┬─────┘
-                     ▼
+               │    NATS   │        ┌───────┐
+               └─────┬─────┘  ← ────│ Redis │
+                     ▼              └───────┘
                 ┌──────────┐
                 │ postgres │
                 └──────────┘
@@ -29,10 +29,10 @@
 
 | Сервис     | Роль |
 |------------|------|
-| `frontend` | Веб-интерфейс — поиск комиксов через браузер |
-| `api`      | HTTP-шлюз — аутентификация, rate limiting, ограничение конкурентности |
+| `frontend` | Веб-интерфейс — поиск, регистрация и логин пользователей |
+| `api`      | HTTP-шлюз — аутентификация (JWT), rate limiting, конкурентность, Swagger UI |
 | `update`   | Загружает комиксы с xkcd.com, сохраняет в PostgreSQL, публикует события в NATS |
-| `search`   | Строит и опрашивает поисковый индекс; подписан на NATS для перестройки индекса |
+| `search`   | Строит поисковый индекс, кеширует результаты в Redis, подписан на NATS |
 | `words`    | Токенизация и нормализация фраз (стоп-слова, стемминг) |
 
 ## Быстрый старт
@@ -41,9 +41,12 @@
 docker compose up -d
 ```
 
-- Веб-интерфейс (поиск): `http://localhost:28090`
-- Панель администратора: `http://localhost:28090/admin`
-- API: `http://localhost:28080`
+| Адрес | Описание |
+|-------|----------|
+| `http://localhost:28090` | Веб-интерфейс (поиск) |
+| `http://localhost:28090/register` | Регистрация пользователя |
+| `http://localhost:28090/admin` | Панель администратора |
+| `http://localhost:28080/swagger/index.html` | Swagger UI — интерактивная документация API |
 
 Полный справочник — в [DOCS.md](DOCS.md).
 
@@ -58,10 +61,35 @@ make unit
 xdg-open cover.html
 ```
 
-Отчёт о покрытии также генерируется автоматически в CI и доступен во вкладке **Actions → джоб unit → Artifacts → coverage-report**.
+Артефакты CI после каждого прогона:
+- **Actions → unit → Artifacts → coverage-report** — `cover.html`
+- **Actions → integration → Artifacts → swagger-docs** — `swagger.json`, `swagger.yaml`
 
 ## Мониторинг
 
 - **Grafana**: `http://localhost:3000`
 - **VictoriaMetrics**: `http://localhost:8428`
 - **pgAdmin**: `http://localhost:18888`
+
+Готовый дашборд Grafana лежит в `metrics/dashboard.json` — импортируйте через **Dashboards → Import → Upload JSON file**.
+
+## Стек технологий
+
+**Backend**
+- Go 1.25
+- gRPC — межсервисное взаимодействие
+- NATS — брокер событий (pub/sub)
+- PostgreSQL — основное хранилище комиксов и пользователей
+- Redis — кеш поисковых запросов (TTL 10 минут)
+- JWT — аутентификация (admin и user роли)
+- bcrypt — хеширование паролей
+- golang-migrate — миграции БД
+
+**API**
+- REST HTTP — публичный API
+- Swagger / OpenAPI 2.0 — документация и интерактивный UI
+
+**Инфраструктура**
+- Docker / Docker Compose
+- GitHub Actions CI — lint, unit, coverage, integration
+- VictoriaMetrics + Grafana — сбор метрик в Prometheus-формате и дашборды

@@ -8,6 +8,12 @@
 
 Введите фразу, выберите количество результатов (10 / 20 / 50 / 100) и нажмите **Search**. Результаты отображаются в виде сетки картинок со ссылками на оригинальные страницы xkcd.com.
 
+### Регистрация и вход
+
+Доступны по адресам `http://localhost:28090/register` и `http://localhost:28090/login`.
+
+Зарегистрированный пользователь может выполнять поиск через веб-интерфейс. Пароли хранятся в PostgreSQL в виде bcrypt-хешей.
+
 ### Панель администратора
 
 Доступна по адресу `http://localhost:28090/admin`. Требует авторизации (логин и пароль задаются через переменные `ADMIN_USER` / `ADMIN_PASSWORD` в docker-compose, по умолчанию `admin` / `password`).
@@ -33,7 +39,14 @@ docker compose up -d
 
 ## Аутентификация
 
-Операции записи требуют JWT-токен. Получить его можно через логин:
+В системе два типа пользователей:
+
+| Тип | Как создать | Может |
+|-----|------------|-------|
+| Admin | Через env `ADMIN_USER` / `ADMIN_PASSWORD` | Всё — update, drop, search |
+| User | Через `POST /api/register` | Только поиск |
+
+### Логин администратора
 
 ```bash
 curl -s -X POST http://localhost:28080/api/login \
@@ -41,7 +54,21 @@ curl -s -X POST http://localhost:28080/api/login \
   -d '{"name":"admin","password":"password"}'
 ```
 
-Полученный токен передаётся в заголовке последующих запросов:
+### Регистрация и логин пользователя
+
+```bash
+# Регистрация
+curl -s -X POST http://localhost:28080/api/register \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"vasya","password":"mypassword"}'
+
+# Логин
+curl -s -X POST http://localhost:28080/api/user/login \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"vasya","password":"mypassword"}'
+```
+
+Полученный токен передаётся в заголовке:
 
 ```
 Authorization: Token <токен>
@@ -162,6 +189,24 @@ GET /api/isearch?phrase=<фраза>&limit=<n>
 
 Параметры те же, что у `/api/search`. Индекс перестраивается автоматически после каждого обновления базы через NATS.
 
+#### Кеш поиска
+
+Результаты `/api/search` кешируются в Redis на 10 минут. Ключ кеша — `search:<phrase>:<limit>`. При обновлении или очистке базы кеш сбрасывается автоматически.
+
+---
+
+## Swagger UI
+
+Интерактивная документация всех API эндпоинтов доступна по адресу:
+
+```
+http://localhost:28080/swagger/index.html
+```
+
+Позволяет отправлять запросы прямо из браузера. Для защищённых эндпоинтов нажмите **Authorize** и введите токен.
+
+Спецификация в формате OpenAPI: `GET /swagger/doc.json`
+
 ---
 
 ## Метрики
@@ -204,9 +249,12 @@ open cover.html       # macOS
 
 ### CI
 
-При каждом пуше и pull request запускаются два джоба:
+При каждом пуше и pull request запускаются три джоба параллельно:
 
-- **build-and-test** — поднимает все сервисы через Docker Compose и прогоняет интеграционные тесты
-- **unit** — запускает юнит-тесты и публикует отчёт о покрытии
+- **lint** — protolint + golangci-lint
+- **unit** — юнит-тесты, проверка порога покрытия (≥50%), артефакт `coverage-report`
+- **integration** — поднимает все сервисы, smoke тесты frontend и swagger, интеграционные тесты, артефакт `swagger-docs`
 
-Скачать `cover.html` можно во вкладке **Actions → нужный запуск → Artifacts → coverage-report**.
+`integration` запускается только после успешных `lint` и `unit`.
+
+Артефакты доступны во вкладке **Actions → нужный запуск → Artifacts**.
