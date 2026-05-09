@@ -22,7 +22,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Delete all comics from the database",
+                "description": "Delete all comics and words from the database, resets the search index and cache",
                 "tags": [
                     "admin"
                 ],
@@ -39,13 +39,19 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
         },
         "/api/db/stats": {
             "get": {
-                "description": "Returns comics and words counts",
+                "description": "Returns total and fetched comics count, total and unique words count",
                 "produces": [
                     "application/json"
                 ],
@@ -57,10 +63,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
+                            "$ref": "#/definitions/rest.StatsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -68,7 +77,7 @@ const docTemplate = `{
         },
         "/api/db/status": {
             "get": {
-                "description": "Returns current update status (idle/running)",
+                "description": "Returns current update status: idle or running",
                 "produces": [
                     "application/json"
                 ],
@@ -80,10 +89,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/rest.StatusResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -96,7 +108,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Fetch new comics from XKCD and store them",
+                "description": "Fetch new comics from xkcd.com and store them. Runs asynchronously — returns 202 if already running",
                 "tags": [
                     "admin"
                 ],
@@ -119,13 +131,19 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
         },
         "/api/isearch": {
             "get": {
-                "description": "Search XKCD comics using in-memory index",
+                "description": "Search XKCD comics using in-memory index, faster but requires index to be built",
                 "produces": [
                     "application/json"
                 ],
@@ -135,6 +153,7 @@ const docTemplate = `{
                 "summary": "Index search",
                 "parameters": [
                     {
+                        "minLength": 1,
                         "type": "string",
                         "description": "Search phrase",
                         "name": "phrase",
@@ -142,9 +161,11 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Result limit",
+                        "description": "Max number of results",
                         "name": "limit",
                         "in": "query"
                     }
@@ -161,13 +182,19 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
         },
         "/api/login": {
             "post": {
-                "description": "Login with admin credentials, returns JWT token",
+                "description": "Login with admin credentials (from env ADMIN_USER/ADMIN_PASSWORD), returns JWT token",
                 "consumes": [
                     "application/json"
                 ],
@@ -180,7 +207,7 @@ const docTemplate = `{
                 "summary": "Admin login",
                 "parameters": [
                     {
-                        "description": "Credentials",
+                        "description": "Admin credentials",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -191,7 +218,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "JWT token",
+                        "description": "eyJhbGciOiJIUzI1NiJ9...",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid request body",
                         "schema": {
                             "type": "string"
                         }
@@ -207,7 +240,7 @@ const docTemplate = `{
         },
         "/api/register": {
             "post": {
-                "description": "Create a new user account",
+                "description": "Create a new user account with bcrypt-hashed password",
                 "consumes": [
                     "application/json"
                 ],
@@ -220,7 +253,7 @@ const docTemplate = `{
                 "summary": "Register user",
                 "parameters": [
                     {
-                        "description": "Credentials",
+                        "description": "New user credentials",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -243,7 +276,7 @@ const docTemplate = `{
                         }
                     },
                     "409": {
-                        "description": "user already exists",
+                        "description": "user already exists or internal error",
                         "schema": {
                             "type": "string"
                         }
@@ -253,7 +286,7 @@ const docTemplate = `{
         },
         "/api/search": {
             "get": {
-                "description": "Search XKCD comics by phrase",
+                "description": "Search XKCD comics by phrase using full-text search against the database",
                 "produces": [
                     "application/json"
                 ],
@@ -263,6 +296,7 @@ const docTemplate = `{
                 "summary": "Search comics",
                 "parameters": [
                     {
+                        "minLength": 1,
                         "type": "string",
                         "description": "Search phrase",
                         "name": "phrase",
@@ -270,9 +304,11 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Result limit",
+                        "description": "Max number of results",
                         "name": "limit",
                         "in": "query"
                     }
@@ -289,13 +325,19 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
         },
         "/api/user/login": {
             "post": {
-                "description": "Login with registered user credentials, returns JWT token",
+                "description": "Login with registered user credentials, returns JWT token valid for searching",
                 "consumes": [
                     "application/json"
                 ],
@@ -308,7 +350,7 @@ const docTemplate = `{
                 "summary": "User login",
                 "parameters": [
                     {
-                        "description": "Credentials",
+                        "description": "User credentials",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -319,7 +361,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "JWT token",
+                        "description": "eyJhbGciOiJIUzI1NiJ9...",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid request body",
                         "schema": {
                             "type": "string"
                         }
@@ -349,14 +397,17 @@ const docTemplate = `{
             }
         },
         "rest.LoginRequest": {
+            "description": "Login credentials for admin or user",
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string",
+                    "minLength": 1,
                     "example": "admin"
                 },
                 "password": {
                     "type": "string",
+                    "minLength": 1,
                     "example": "password"
                 }
             }
@@ -372,7 +423,41 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer",
-                    "example": 10
+                    "example": 5
+                }
+            }
+        },
+        "rest.StatsResponse": {
+            "type": "object",
+            "properties": {
+                "comics_fetched": {
+                    "type": "integer",
+                    "example": 3241
+                },
+                "comics_total": {
+                    "type": "integer",
+                    "example": 3241
+                },
+                "words_total": {
+                    "type": "integer",
+                    "example": 148234
+                },
+                "words_unique": {
+                    "type": "integer",
+                    "example": 9412
+                }
+            }
+        },
+        "rest.StatusResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "idle",
+                        "running"
+                    ],
+                    "example": "idle"
                 }
             }
         }
