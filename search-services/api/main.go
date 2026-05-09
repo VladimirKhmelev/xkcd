@@ -12,6 +12,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -41,9 +42,15 @@ func main() {
 	flag.Parse()
 
 	cfg := config.MustLoad(configPath)
-
 	log := mustMakeLogger(cfg.LogLevel)
 
+	if err := run(cfg, log); err != nil {
+		log.Error("server failed", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run(cfg config.Config, log *slog.Logger) error {
 	log.Info("starting server")
 	log.Debug("debug messages are enabled")
 
@@ -52,43 +59,41 @@ func main() {
 		if err != nil {
 			log.Warn("tracing unavailable", "error", err)
 		} else {
-			defer shutdown(context.Background())
+			defer func() {
+				if err := shutdown(context.Background()); err != nil {
+					log.Error("tracing shutdown failed", "error", err)
+				}
+			}()
 			log.Info("tracing enabled", "endpoint", cfg.OTLPEndpoint)
 		}
 	}
 
 	updateClient, err := update.NewClient(cfg.UpdateAddress, log)
 	if err != nil {
-		log.Error("cannot init update adapter", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("cannot init update adapter: %w", err)
 	}
 
 	wordsClient, err := words.NewClient(cfg.WordsAddress, log)
 	if err != nil {
-		log.Error("cannot init words adapter", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("cannot init words adapter: %w", err)
 	}
 
 	searchClient, err := searchadapter.NewClient(cfg.SearchAddress, log)
 	if err != nil {
-		log.Error("cannot init search adapter", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("cannot init search adapter: %w", err)
 	}
 
 	auth, err := aaa.New(cfg.TokenTTL, log)
 	if err != nil {
-		log.Error("cannot init aaa", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("cannot init aaa: %w", err)
 	}
 
 	userDB, err := apidb.New(log, cfg.DBAddress)
 	if err != nil {
-		log.Error("cannot init user db", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("cannot init user db: %w", err)
 	}
 	if err := userDB.Migrate(); err != nil {
-		log.Error("cannot migrate user db", "error", err)
-		os.Exit(1)
+		return fmt.Errorf("cannot migrate user db: %w", err)
 	}
 
 	mux := http.NewServeMux()
@@ -131,12 +136,11 @@ func main() {
 	log.Info("Running HTTP server", "address", cfg.HTTPConfig.Address)
 	if err := server.ListenAndServe(); err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
-			log.Error("server closed unexpectedly", "error", err)
-			return
+			return fmt.Errorf("server closed unexpectedly: %w", err)
 		}
 	}
+	return nil
 }
-
 
 func mustMakeLogger(logLevel string) *slog.Logger {
 	var level slog.Level

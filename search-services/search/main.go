@@ -46,7 +46,11 @@ func run(cfg config.Config, log *slog.Logger) error {
 		if err != nil {
 			log.Warn("tracing unavailable", "error", err)
 		} else {
-			defer shutdown(context.Background())
+			defer func() {
+				if err := shutdown(context.Background()); err != nil {
+					log.Error("tracing shutdown failed", "error", err)
+				}
+			}()
 			log.Info("tracing enabled", "endpoint", cfg.OTLPEndpoint)
 		}
 	}
