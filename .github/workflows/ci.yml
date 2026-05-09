@@ -100,8 +100,30 @@ jobs:
           curl -sf http://localhost:28090/login | grep -q "Log in"
           curl -sf http://localhost:28090/register | grep -q "Register"
 
+      - name: Smoke test swagger
+        run: |
+          curl -sf http://localhost:28080/swagger/index.html | grep -q "Swagger UI"
+          curl -sf http://localhost:28080/swagger/doc.json | python3 -c "
+          import sys, json
+          spec = json.load(sys.stdin)
+          paths = spec.get('paths', {})
+          required = ['/api/search', '/api/login', '/api/register', '/api/user/login']
+          for p in required:
+              assert p in paths, f'missing path: {p}'
+          print('swagger spec OK, paths:', list(paths.keys()))
+          "
+
       - name: Run integration tests
         run: docker compose run --rm tests
+
+      - name: Upload swagger docs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swagger-docs
+          path: |
+            search-services/api/docs/swagger.json
+            search-services/api/docs/swagger.yaml
 
       - name: Collect logs on failure
         if: failure()
