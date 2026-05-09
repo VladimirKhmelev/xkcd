@@ -49,9 +49,13 @@ func run(cfg config.Config, log *slog.Logger) error {
 		return fmt.Errorf("failed to create words client: %w", err)
 	}
 
-	redisCache, err := cache.New(cfg.RedisAddress)
+	var redisCache core.Cache
+	rc, err := cache.New(cfg.RedisAddress)
 	if err != nil {
-		return fmt.Errorf("failed to connect to redis: %w", err)
+		log.Warn("redis unavailable, running without cache", "error", err)
+		redisCache = cache.Noop{}
+	} else {
+		redisCache = rc
 	}
 
 	service := core.NewService(log, storage, wordsClient, redisCache)
