@@ -74,8 +74,11 @@ xdg-open cover.html
 - **Grafana**: `http://localhost:3000`
 - **VictoriaMetrics**: `http://localhost:8428`
 - **pgAdmin**: `http://localhost:18888`
+- **Jaeger UI**: `http://localhost:16686`
 
 Готовый дашборд Grafana лежит в `metrics/dashboard.json` — импортируйте через **Dashboards → Import → Upload JSON file**.
+
+![Grafana Dashboard](metrics/grafana.png)
 
 ## Стек технологий
 
@@ -97,3 +100,4 @@ xdg-open cover.html
 - Docker / Docker Compose
 - GitHub Actions CI — lint, unit, coverage, integration
 - VictoriaMetrics + Grafana — сбор метрик в Prometheus-формате и дашборды
+
