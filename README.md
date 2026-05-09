@@ -1,5 +1,9 @@
 # XKCD Search
 
+[![CI](https://github.com/VladimirKhmelev/xkcd/actions/workflows/ci.yml/badge.svg)](https://github.com/VladimirKhmelev/xkcd/actions/workflows/ci.yml)
+[![Swagger](https://img.shields.io/badge/API-Swagger-green)](https://vladimirkhmelev.github.io/xkcd/swagger/)
+[![Coverage](https://img.shields.io/badge/Coverage-Report-blue)](https://vladimirkhmelev.github.io/xkcd/coverage/cover.html)
+
 Микросервисная система для поиска комиксов [xkcd.com](https://xkcd.com) по фразе.
 
 Комиксы загружаются из API xkcd, хранятся в PostgreSQL и индексируются для быстрого поиска. Индекс перестраивается автоматически через NATS при каждом обновлении базы. Результаты поиска кешируются в Redis.
