@@ -11,7 +11,9 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	searchpb "yadro.com/course/proto/search"
+	"yadro.com/course/pkg/tracing"
 	"yadro.com/course/search/adapters/broker"
 	"yadro.com/course/search/adapters/cache"
 	"yadro.com/course/search/adapters/db"
@@ -38,6 +40,16 @@ func main() {
 
 func run(cfg config.Config, log *slog.Logger) error {
 	log.Info("starting search server")
+
+	if cfg.OTLPEndpoint != "" {
+		shutdown, err := tracing.Init(context.Background(), "search", cfg.OTLPEndpoint)
+		if err != nil {
+			log.Warn("tracing unavailable", "error", err)
+		} else {
+			defer shutdown(context.Background())
+			log.Info("tracing enabled", "endpoint", cfg.OTLPEndpoint)
+		}
+	}
 
 	storage, err := db.New(log, cfg.DBAddress)
 	if err != nil {
@@ -77,7 +89,7 @@ func run(cfg config.Config, log *slog.Logger) error {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler()))
 	searchpb.RegisterSearchServer(s, searchgrpc.NewServer(service))
 	reflection.Register(s)
 

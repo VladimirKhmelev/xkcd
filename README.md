@@ -103,4 +103,4 @@ xdg-open cover.html
 - Docker / Docker Compose
 - GitHub Actions CI — lint, unit, coverage, integration
 - VictoriaMetrics + Grafana — сбор метрик в Prometheus-формате и дашборды
-
+- OpenTelemetry + Jaeger — распределённый трейсинг запросов

@@ -8,6 +8,7 @@ ENV PATH="$PATH:$(go env GOPATH)/bin"
 COPY go.mod go.sum /src/
 COPY proto /src/proto
 COPY search /src/search
+COPY pkg /src/pkg
 
 RUN cd /src && \
     protoc --go_out=.      --go_opt=paths=source_relative \
@@ -15,7 +16,7 @@ RUN cd /src && \
     proto/search/search.proto
 
 ENV CGO_ENABLED=0
-RUN cd /src && go build -o /search search/main.go
+RUN cd /src && go build -o /search ./search
 
 FROM alpine:3.20
 

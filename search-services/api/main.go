@@ -29,8 +29,10 @@ import (
 	"yadro.com/course/api/adapters/words"
 	"yadro.com/course/api/config"
 	"yadro.com/course/api/core"
+	"yadro.com/course/pkg/tracing"
 
 	httpSwagger "github.com/swaggo/http-swagger"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
@@ -44,6 +46,16 @@ func main() {
 
 	log.Info("starting server")
 	log.Debug("debug messages are enabled")
+
+	if cfg.OTLPEndpoint != "" {
+		shutdown, err := tracing.Init(context.Background(), "api", cfg.OTLPEndpoint)
+		if err != nil {
+			log.Warn("tracing unavailable", "error", err)
+		} else {
+			defer shutdown(context.Background())
+			log.Info("tracing enabled", "endpoint", cfg.OTLPEndpoint)
+		}
+	}
 
 	updateClient, err := update.NewClient(cfg.UpdateAddress, log)
 	if err != nil {
@@ -104,7 +116,7 @@ func main() {
 	server := http.Server{
 		Addr:              cfg.HTTPConfig.Address,
 		ReadHeaderTimeout: cfg.HTTPConfig.Timeout,
-		Handler:           middleware.WithMetrics(mux),
+		Handler:           otelhttp.NewHandler(middleware.WithMetrics(mux), "api"),
 		BaseContext:       func(_ net.Listener) context.Context { return ctx },
 	}
 

@@ -22,6 +22,7 @@ type Config struct {
 	SearchAddress     string        `yaml:"search_address" env:"SEARCH_ADDRESS" env-default:"search:83"`
 	TokenTTL          time.Duration `yaml:"token_ttl" env:"TOKEN_TTL" env-default:"24h"`
 	DBAddress         string        `yaml:"db_address" env:"DB_ADDRESS" env-default:""`
+	OTLPEndpoint      string        `yaml:"otlp_endpoint" env:"OTLP_ENDPOINT" env-default:""`
 }
 
 func MustLoad(configPath string) Config {

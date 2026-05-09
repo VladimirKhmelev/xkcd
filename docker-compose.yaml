@@ -40,11 +40,13 @@ services:
       - SEARCH_CONCURRENCY=10
       - SEARCH_RATE=100
       - DB_ADDRESS=postgres://postgres:password@postgres:5432/postgres
+      - OTLP_ENDPOINT=jaeger:4317
     depends_on:
       - words
       - update
       - search
       - postgres
+      - jaeger
 
   words:
     image: words:latest
@@ -104,6 +106,7 @@ services:
       - INDEX_TTL=24h
       - BROKER_ADDRESS=nats://nats:4222
       - REDIS_ADDRESS=redis:6379
+      - OTLP_ENDPOINT=jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
@@ -112,6 +115,8 @@ services:
       nats:
         condition: service_started
       redis:
+        condition: service_started
+      jaeger:
         condition: service_started
 
   tests:
@@ -191,6 +196,16 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
 
 volumes:
   postgres:

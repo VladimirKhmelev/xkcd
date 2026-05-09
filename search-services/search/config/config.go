@@ -16,6 +16,7 @@ type Config struct {
 	IndexTTL      time.Duration `yaml:"index_ttl"      env:"INDEX_TTL"       env-default:"5m"`
 	BrokerAddress string        `yaml:"broker_address" env:"BROKER_ADDRESS"  env-default:"nats://localhost:4222"`
 	RedisAddress  string        `yaml:"redis_address"  env:"REDIS_ADDRESS"   env-default:"localhost:6379"`
+	OTLPEndpoint  string        `yaml:"otlp_endpoint"  env:"OTLP_ENDPOINT"   env-default:""`
 }
 
 func MustLoad(configPath string) Config {
