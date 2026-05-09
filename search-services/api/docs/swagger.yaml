@@ -1,0 +1,249 @@
+basePath: /
+definitions:
+  rest.ComicsItem:
+    properties:
+      id:
+        example: 353
+        type: integer
+      url:
+        example: https://imgs.xkcd.com/comics/python.png
+        type: string
+    type: object
+  rest.LoginRequest:
+    properties:
+      name:
+        example: admin
+        type: string
+      password:
+        example: password
+        type: string
+    type: object
+  rest.SearchResponse:
+    properties:
+      comics:
+        items:
+          $ref: '#/definitions/rest.ComicsItem'
+        type: array
+      total:
+        example: 10
+        type: integer
+    type: object
+host: localhost:28080
+info:
+  contact: {}
+  description: API for searching XKCD comics
+  title: XKCD Search API
+  version: "1.0"
+paths:
+  /api/db:
+    delete:
+      description: Delete all comics from the database
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "401":
+          description: unauthorized
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Drop database
+      tags:
+      - admin
+  /api/db/stats:
+    get:
+      description: Returns comics and words counts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+      summary: Database stats
+      tags:
+      - admin
+  /api/db/status:
+    get:
+      description: Returns current update status (idle/running)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update status
+      tags:
+      - admin
+  /api/db/update:
+    post:
+      description: Fetch new comics from XKCD and store them
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "202":
+          description: already running
+          schema:
+            type: string
+        "401":
+          description: unauthorized
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update database
+      tags:
+      - admin
+  /api/isearch:
+    get:
+      description: Search XKCD comics using in-memory index
+      parameters:
+      - description: Search phrase
+        in: query
+        name: phrase
+        required: true
+        type: string
+      - default: 10
+        description: Result limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.SearchResponse'
+        "400":
+          description: phrase is required
+          schema:
+            type: string
+      summary: Index search
+      tags:
+      - search
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with admin credentials, returns JWT token
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.LoginRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: JWT token
+          schema:
+            type: string
+        "401":
+          description: unauthorized
+          schema:
+            type: string
+      summary: Admin login
+      tags:
+      - auth
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.LoginRequest'
+      produces:
+      - text/plain
+      responses:
+        "201":
+          description: created
+          schema:
+            type: string
+        "400":
+          description: name and password are required
+          schema:
+            type: string
+        "409":
+          description: user already exists
+          schema:
+            type: string
+      summary: Register user
+      tags:
+      - auth
+  /api/search:
+    get:
+      description: Search XKCD comics by phrase
+      parameters:
+      - description: Search phrase
+        in: query
+        name: phrase
+        required: true
+        type: string
+      - default: 10
+        description: Result limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.SearchResponse'
+        "400":
+          description: phrase is required
+          schema:
+            type: string
+      summary: Search comics
+      tags:
+      - search
+  /api/user/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with registered user credentials, returns JWT token
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.LoginRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: JWT token
+          schema:
+            type: string
+        "401":
+          description: unauthorized
+          schema:
+            type: string
+      summary: User login
+      tags:
+      - auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -1,3 +1,11 @@
+// @title           XKCD Search API
+// @version         1.0
+// @description     API for searching XKCD comics
+// @host            localhost:28080
+// @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 package main
 
 import (
@@ -10,6 +18,8 @@ import (
 	"os"
 	"os/signal"
 
+	_ "yadro.com/course/api/docs"
+
 	"yadro.com/course/api/adapters/aaa"
 	apidb "yadro.com/course/api/adapters/db"
 	"yadro.com/course/api/adapters/rest"
@@ -19,6 +29,8 @@ import (
 	"yadro.com/course/api/adapters/words"
 	"yadro.com/course/api/config"
 	"yadro.com/course/api/core"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
@@ -69,6 +81,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
 	mux.Handle("GET /metrics", rest.NewMetricsHandler())
 	mux.Handle("GET /api/ping", rest.NewPingHandler(log, map[string]core.Pinger{
 		"update": updateClient,
