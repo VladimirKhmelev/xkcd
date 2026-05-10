@@ -39,14 +39,19 @@ services:
       - SEARCH_ADDRESS=search:8080
       - SEARCH_CONCURRENCY=10
       - SEARCH_RATE=100
-      - DB_ADDRESS=postgres://postgres:password@postgres:5432/postgres
+      - DB_ADDRESS=postgres://postgres:password@postgres-api:5432/postgres
       - OTLP_ENDPOINT=jaeger:4317
     depends_on:
-      - words
-      - update
-      - search
-      - postgres
-      - jaeger
+      words:
+        condition: service_started
+      update:
+        condition: service_started
+      search:
+        condition: service_started
+      jaeger:
+        condition: service_started
+      postgres-api:
+        condition: service_healthy
 
   words:
     image: words:latest
@@ -144,6 +149,23 @@ services:
       start_period: 30s
       timeout: 10s
 
+  postgres-api:
+    image: postgres:18
+    container_name: postgres-api
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres-api:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin4
@@ -209,6 +231,7 @@ services:
 
 volumes:
   postgres:
+  postgres-api:
   pgadmin:
   vmdata:
   grafanadata:
