@@ -8,43 +8,72 @@
 </head>
 <body>
 <header>
-  <h1>XKCD Search</h1>
-  <nav>
+  <div class="header-brand">
+    <span class="logo">🔍</span>
+    <h1>XKCD Search</h1>
+  </div>
+  <nav class="header-nav">
     {{if .LoggedIn}}
     <form method="POST" action="/logout" style="display:inline">
-      <button type="submit" class="btn">Log out</button>
+      <button type="submit" class="btn-ghost" style="padding:0.4rem 1rem;border-radius:20px;font-size:0.85rem;cursor:pointer;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#a5b4fc;">Log out</button>
     </form>
     {{else}}
-    <a href="/login">Log in</a> &nbsp; <a href="/register">Register</a>
+    <a href="/login">Log in</a>
+    <a href="/register">Register</a>
     {{end}}
-    <a href="/admin">Admin Panel</a>
+    <a href="/admin">Admin</a>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
   </nav>
 </header>
+
 <main>
-  <div class="card">
-    <h2>Search comics by phrase</h2>
+  <div class="search-hero">
+    <h2>Search XKCD Comics</h2>
+    <p>Find your favourite comics by phrase or keyword</p>
+
     <form method="GET" action="/">
-      <div class="search-row">
-        <input type="text" class="flex-grow" name="phrase" value="{{.Phrase}}" placeholder="Enter search phrase..." autofocus>
-        <select name="limit">
-          <option value="10"  {{if eq .Limit 10}}selected{{end}}>10</option>
-          <option value="20"  {{if eq .Limit 20}}selected{{end}}>20</option>
-          <option value="50"  {{if eq .Limit 50}}selected{{end}}>50</option>
-          <option value="100" {{if eq .Limit 100}}selected{{end}}>100</option>
-        </select>
+      <div class="search-bar">
+        <input type="text" name="phrase" value="{{.Phrase}}" placeholder="linux, python, machine learning..." autofocus>
+        <input type="hidden" name="page" value="1">
         <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+      <div class="search-options">
+        <label>Results per page:
+          <select name="limit" onchange="this.form.submit()">
+            <option value="10"  {{if eq .Limit 10}}selected{{end}}>10</option>
+            <option value="20"  {{if eq .Limit 20}}selected{{end}}>20</option>
+            <option value="50"  {{if eq .Limit 50}}selected{{end}}>50</option>
+            <option value="100" {{if eq .Limit 100}}selected{{end}}>100</option>
+          </select>
+        </label>
       </div>
     </form>
   </div>
 
   {{if .Error}}
-  <div class="alert alert-error">{{.Error}}</div>
+  <div class="alert alert-error">⚠️ {{.Error}}</div>
   {{end}}
 
   {{if .Comics}}
   <div class="results-header">
-    Found <strong>{{.Total}}</strong> comic{{if gt .Total 1}}s{{end}} for &ldquo;{{.Phrase}}&rdquo;
+    <span>Found <strong>{{.Total}}</strong> comic{{if gt .Total 1}}s{{end}} for &ldquo;{{.Phrase}}&rdquo;</span>
+    {{if gt .Pages 1}}
+    <div class="pagination-mini">
+      {{if .HasPrev}}
+      <a href="?phrase={{.Phrase}}&limit={{.Limit}}&page={{.PrevPage}}" class="pg-btn">← Prev</a>
+      {{else}}
+      <span class="pg-btn disabled">← Prev</span>
+      {{end}}
+      <span class="pg-info">{{.Page}} / {{.Pages}}</span>
+      {{if .HasNext}}
+      <a href="?phrase={{.Phrase}}&limit={{.Limit}}&page={{.NextPage}}" class="pg-btn">Next →</a>
+      {{else}}
+      <span class="pg-btn disabled">Next →</span>
+      {{end}}
+    </div>
+    {{end}}
   </div>
+
   <div class="comics-grid">
     {{range .Comics}}
     <div class="comic-card">
@@ -55,12 +84,60 @@
     </div>
     {{end}}
   </div>
+
+  {{if gt .Pages 1}}
+  <div class="pagination">
+    {{if .HasPrev}}
+    <a href="?phrase={{.Phrase}}&limit={{.Limit}}&page=1">«</a>
+    <a href="?phrase={{.Phrase}}&limit={{.Limit}}&page={{.PrevPage}}">‹ Prev</a>
+    {{else}}
+    <span class="disabled">«</span>
+    <span class="disabled">‹ Prev</span>
+    {{end}}
+
+    <span class="active">{{.Page}}</span>
+
+    {{if .HasNext}}
+    <a href="?phrase={{.Phrase}}&limit={{.Limit}}&page={{.NextPage}}">Next ›</a>
+    <a href="?phrase={{.Phrase}}&limit={{.Limit}}&page={{.Pages}}">»</a>
+    {{else}}
+    <span class="disabled">Next ›</span>
+    <span class="disabled">»</span>
+    {{end}}
+  </div>
+  {{end}}
+
   {{else if .Phrase}}
   {{if not .Error}}
-  <div class="no-results">No comics found for &ldquo;{{.Phrase}}&rdquo;</div>
+  <div class="no-results">
+    <span class="emoji">🤷</span>
+    No comics found for &ldquo;{{.Phrase}}&rdquo;
+  </div>
   {{end}}
   {{end}}
 </main>
+
+<footer>
+  <p>Powered by <a href="https://xkcd.com" target="_blank" style="color:var(--accent)">xkcd.com</a> · Built with Go</p>
+</footer>
+
 <script src="/static/js/search.js"></script>
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeBtn').textContent = isDark ? '🌙 Dark' : '☀️ Light';
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  }
+  (function() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('themeBtn');
+      if (btn) btn.textContent = saved === 'dark' ? '☀️ Light' : '🌙 Dark';
+    });
+  })();
+</script>
 </body>
 </html>

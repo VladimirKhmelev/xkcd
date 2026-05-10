@@ -8,31 +8,55 @@
 </head>
 <body>
 <header>
-  <h1>XKCD Admin Panel</h1>
-  <a href="/">Back to Search</a>
+  <div class="header-brand">
+    <span class="logo">⚙️</span>
+    <h1>XKCD Admin</h1>
+  </div>
+  <nav class="header-nav">
+    <a href="/">← Search</a>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+  </nav>
 </header>
+
 <main>
   {{if .Message}}
-  <div class="alert alert-success">{{.Message}}</div>
+  <div class="alert alert-success">✓ {{.Message}}</div>
   {{end}}
-
   {{if .Error}}
-  <div class="alert alert-error">{{.Error}}</div>
+  <div class="alert alert-error">⚠️ {{.Error}}</div>
   {{end}}
 
   {{if .LoggedIn}}
 
-  <!-- Status & Stats -->
-  <div class="card">
-    <h2>Database Status</h2>
-    {{if .StatusError}}
-    <div class="alert alert-error">{{.StatusError}}</div>
-    {{else}}
-    <p>
-      Current status:
-      <span class="status-badge status-{{.Status}}">{{.Status}}</span>
-    </p>
-    {{end}}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+
+    <div class="card" style="margin-bottom:0">
+      <h2>Status</h2>
+      {{if .StatusError}}
+      <div class="alert alert-error">{{.StatusError}}</div>
+      {{else}}
+      <div style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem">
+        <span class="status-badge status-{{.Status}}">{{.Status}}</span>
+        <span style="color:var(--text-muted);font-size:0.875rem">Update service</span>
+      </div>
+      {{end}}
+    </div>
+
+    <div class="card" style="margin-bottom:0">
+      <h2>Actions</h2>
+      <div class="actions-row" style="margin-top:0.5rem">
+        <form method="POST" action="/admin/update">
+          <button type="submit" class="btn btn-primary">🔄 Update DB</button>
+        </form>
+        <form method="POST" action="/admin/drop">
+          <button type="submit" id="drop-btn" class="btn btn-danger">🗑 Drop DB</button>
+        </form>
+        <form method="POST" action="/admin/logout">
+          <button type="submit" class="btn btn-ghost">Log out</button>
+        </form>
+      </div>
+    </div>
+
   </div>
 
   <div class="card">
@@ -61,42 +85,49 @@
     {{end}}
   </div>
 
-  <!-- Actions -->
-  <div class="card">
-    <h2>Actions</h2>
-    <div class="actions-row">
-      <form method="POST" action="/admin/update">
-        <button type="submit" class="btn btn-primary">Update Database</button>
-      </form>
-      <form method="POST" action="/admin/drop">
-        <button type="submit" id="drop-btn" class="btn btn-danger">Drop Database</button>
-      </form>
-      <form method="POST" action="/admin/logout">
-        <button type="submit" class="btn btn-secondary">Logout</button>
-      </form>
-    </div>
-  </div>
-
   {{else}}
 
-  <!-- Login form -->
-  <div class="card">
-    <h2>Login</h2>
+  <div class="auth-card">
+    <h2>Admin Login</h2>
+    <p class="subtitle">Access restricted to administrators</p>
+
     <form method="POST" action="/admin/login">
       <div class="form-group">
-        <label for="name">Username</label>
-        <input type="text" id="name" name="name" class="flex-grow" required autofocus>
+        <label>Username</label>
+        <input type="text" name="name" required autofocus>
       </div>
       <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" class="flex-grow" required>
+        <label>Password</label>
+        <input type="password" name="password" required>
       </div>
-      <button type="submit" class="btn btn-primary">Login</button>
+      <button type="submit" class="btn btn-primary">Log in</button>
     </form>
+
+    <div class="auth-footer">
+      <a href="/">← Back to search</a>
+    </div>
   </div>
 
   {{end}}
 </main>
+
 <script src="/static/js/admin.js"></script>
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeBtn').textContent = isDark ? '🌙 Dark' : '☀️ Light';
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  }
+  (function() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('themeBtn');
+      if (btn) btn.textContent = saved === 'dark' ? '☀️ Light' : '🌙 Dark';
+    });
+  })();
+</script>
 </body>
 </html>

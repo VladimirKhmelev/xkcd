@@ -3,34 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login — XKCD Search</title>
+  <title>Log in — XKCD Search</title>
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 <header>
-  <h1>XKCD Search</h1>
-  <a href="/">Search</a>
+  <div class="header-brand">
+    <span class="logo">🔍</span>
+    <h1>XKCD Search</h1>
+  </div>
+  <nav class="header-nav">
+    <a href="/">Search</a>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+  </nav>
 </header>
+
 <main>
-  <div class="card" style="max-width:400px;margin:40px auto">
-    <h2>Log in</h2>
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <p class="subtitle">Log in to search XKCD comics</p>
+
     {{if .Message}}
-    <div class="alert">{{.Message}}</div>
+    <div class="alert alert-success">✓ {{.Message}}</div>
     {{end}}
     {{if .Error}}
-    <div class="alert alert-error">{{.Error}}</div>
+    <div class="alert alert-error">⚠️ {{.Error}}</div>
     {{end}}
+
     <form method="POST" action="/login">
-      <div style="margin-bottom:12px">
-        <input type="text" name="name" placeholder="Username" required style="width:100%">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="name" placeholder="Your username" required autofocus>
       </div>
-      <div style="margin-bottom:12px">
-        <input type="password" name="password" placeholder="Password" required style="width:100%">
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Your password" required>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%">Log in</button>
+      <button type="submit" class="btn btn-primary">Log in</button>
     </form>
-    <p style="margin-top:16px;text-align:center">No account? <a href="/register">Register</a></p>
+
+    <div class="auth-footer">
+      No account? <a href="/register">Register</a>
+    </div>
   </div>
 </main>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeBtn').textContent = isDark ? '🌙 Dark' : '☀️ Light';
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  }
+  (function() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('themeBtn');
+      if (btn) btn.textContent = saved === 'dark' ? '☀️ Light' : '🌙 Dark';
+    });
+  })();
+</script>
 </body>
 </html>

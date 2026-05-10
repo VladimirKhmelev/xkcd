@@ -32,18 +32,20 @@ func New(log *slog.Logger, apiAddress string, templates *template.Template) *Han
 
 func (h *Handler) SearchPage(w http.ResponseWriter, r *http.Request) {
 	phrase := r.URL.Query().Get("phrase")
-	limitStr := r.URL.Query().Get("limit")
 	limit := 10
-	if limitStr != "" {
-		if v, err := strconv.Atoi(limitStr); err == nil && v > 0 {
-			limit = v
-		}
+	if v, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && v > 0 {
+		limit = v
+	}
+	page := 1
+	if v, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && v > 0 {
+		page = v
 	}
 
 	token := h.getUserToken(r)
 	data := map[string]any{
 		"Phrase":   phrase,
 		"Limit":    limit,
+		"Page":     page,
 		"LoggedIn": token != "",
 	}
 
@@ -51,12 +53,17 @@ func (h *Handler) SearchPage(w http.ResponseWriter, r *http.Request) {
 		if token == "" {
 			data["Error"] = "Please log in to search"
 		} else {
-			comics, total, err := h.search(r, phrase, limit, token)
+			comics, total, pages, err := h.search(r, phrase, limit, page, token)
 			if err != nil {
 				data["Error"] = err.Error()
 			} else {
 				data["Comics"] = comics
 				data["Total"] = total
+				data["Pages"] = pages
+				data["PrevPage"] = page - 1
+				data["NextPage"] = page + 1
+				data["HasPrev"] = page > 1
+				data["HasNext"] = page < pages
 			}
 		}
 	}
@@ -194,29 +201,30 @@ type comicsItem struct {
 	URL string `json:"url"`
 }
 
-func (h *Handler) search(r *http.Request, phrase string, limit int, token string) ([]comicsItem, int, error) {
-	apiURL := fmt.Sprintf("%s/api/search?phrase=%s&limit=%d", h.apiAddress, url.QueryEscape(phrase), limit)
+func (h *Handler) search(r *http.Request, phrase string, limit, page int, token string) ([]comicsItem, int, int, error) {
+	apiURL := fmt.Sprintf("%s/api/search?phrase=%s&limit=%d&page=%d", h.apiAddress, url.QueryEscape(phrase), limit, page)
 	req, _ := http.NewRequestWithContext(r.Context(), http.MethodGet, apiURL, nil)
 	req.Header.Set("Authorization", "Token "+token)
 	resp, err := h.httpClient.Do(req)
 	if err != nil {
-		return nil, 0, fmt.Errorf("search request failed: %w", err)
+		return nil, 0, 0, fmt.Errorf("search request failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, 0, fmt.Errorf("search error: %s", strings.TrimSpace(string(body)))
+		return nil, 0, 0, fmt.Errorf("search error: %s", strings.TrimSpace(string(body)))
 	}
 
 	var result struct {
 		Comics []comicsItem `json:"comics"`
 		Total  int          `json:"total"`
+		Pages  int          `json:"pages"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, 0, fmt.Errorf("failed to parse response: %w", err)
+		return nil, 0, 0, fmt.Errorf("failed to parse response: %w", err)
 	}
-	return result.Comics, result.Total, nil
+	return result.Comics, result.Total, result.Pages, nil
 }
 
 func (h *Handler) login(name, password string) (string, error) {

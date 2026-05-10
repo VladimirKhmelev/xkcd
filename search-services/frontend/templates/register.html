@@ -8,26 +8,59 @@
 </head>
 <body>
 <header>
-  <h1>XKCD Search</h1>
-  <a href="/">Search</a>
+  <div class="header-brand">
+    <span class="logo">🔍</span>
+    <h1>XKCD Search</h1>
+  </div>
+  <nav class="header-nav">
+    <a href="/">Search</a>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+  </nav>
 </header>
+
 <main>
-  <div class="card" style="max-width:400px;margin:40px auto">
-    <h2>Register</h2>
+  <div class="auth-card">
+    <h2>Create account</h2>
+    <p class="subtitle">Join to search XKCD comics</p>
+
     {{if .Error}}
-    <div class="alert alert-error">{{.Error}}</div>
+    <div class="alert alert-error">⚠️ {{.Error}}</div>
     {{end}}
+
     <form method="POST" action="/register">
-      <div style="margin-bottom:12px">
-        <input type="text" name="name" placeholder="Username" required style="width:100%">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="name" placeholder="Choose a username" required autofocus>
       </div>
-      <div style="margin-bottom:12px">
-        <input type="password" name="password" placeholder="Password" required style="width:100%">
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Choose a password" required>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%">Register</button>
+      <button type="submit" class="btn btn-primary">Register</button>
     </form>
-    <p style="margin-top:16px;text-align:center">Already have an account? <a href="/login">Log in</a></p>
+
+    <div class="auth-footer">
+      Already have an account? <a href="/login">Log in</a>
+    </div>
   </div>
 </main>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeBtn').textContent = isDark ? '🌙 Dark' : '☀️ Light';
+    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  }
+  (function() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.addEventListener('DOMContentLoaded', function() {
+      const btn = document.getElementById('themeBtn');
+      if (btn) btn.textContent = saved === 'dark' ? '☀️ Light' : '🌙 Dark';
+    });
+  })();
+</script>
 </body>
 </html>

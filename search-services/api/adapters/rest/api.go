@@ -172,6 +172,24 @@ func NewDropHandler(log *slog.Logger, updater core.Updater) http.HandlerFunc {
 	}
 }
 
+func parsePageParams(r *http.Request) (limit, page int, err error) {
+	limit = 10
+	if ls := r.URL.Query().Get("limit"); ls != "" {
+		limit, err = strconv.Atoi(ls)
+		if err != nil || limit < 1 {
+			return 0, 0, errors.New("invalid limit")
+		}
+	}
+	page = 1
+	if ps := r.URL.Query().Get("page"); ps != "" {
+		page, err = strconv.Atoi(ps)
+		if err != nil || page < 1 {
+			return 0, 0, errors.New("invalid page")
+		}
+	}
+	return limit, page, nil
+}
+
 func NewSearchHandler(log *slog.Logger, searcher core.Searcher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		phrase := r.URL.Query().Get("phrase")
@@ -180,23 +198,33 @@ func NewSearchHandler(log *slog.Logger, searcher core.Searcher) http.HandlerFunc
 			return
 		}
 
-		limitStr := r.URL.Query().Get("limit")
-		limit := 10
-		if limitStr != "" {
-			var err error
-			limit, err = strconv.Atoi(limitStr)
-			if err != nil || limit < 0 {
-				http.Error(w, "invalid limit", http.StatusBadRequest)
-				return
-			}
+		limit, page, err := parsePageParams(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
-		comics, err := searcher.Search(r.Context(), phrase, limit)
+		all, err := searcher.Search(r.Context(), phrase, 0)
 		if err != nil {
 			log.Error("search failed", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		total := len(all)
+		pages := (total + limit - 1) / limit
+		if pages == 0 {
+			pages = 1
+		}
+		offset := (page - 1) * limit
+		if offset > total {
+			offset = total
+		}
+		end := offset + limit
+		if end > total {
+			end = total
+		}
+		comics := all[offset:end]
 
 		type comicsItem struct {
 			ID  int    `json:"id"`
@@ -208,7 +236,9 @@ func NewSearchHandler(log *slog.Logger, searcher core.Searcher) http.HandlerFunc
 		}
 		writeJSON(w, map[string]any{
 			"comics": items,
-			"total":  len(items),
+			"total":  total,
+			"page":   page,
+			"pages":  pages,
 		})
 	}
 }

@@ -32,14 +32,19 @@ type dbComic struct {
 
 
 func (db *DB) Search(ctx context.Context, keywords []string, limit int) ([]core.Comics, error) {
-	rows, err := db.conn.QueryxContext(ctx, `
+	query := `
 		SELECT id, img_url,
 			(SELECT count(*) FROM unnest(keywords) k WHERE k = ANY($1)) AS matches
 		FROM comics
 		WHERE keywords && $1
-		ORDER BY matches DESC
-		LIMIT $2
-	`, keywords, limit)
+		ORDER BY matches DESC`
+	var args []any
+	args = append(args, keywords)
+	if limit > 0 {
+		query += ` LIMIT $2`
+		args = append(args, limit)
+	}
+	rows, err := db.conn.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
