@@ -59,7 +59,7 @@
 				
 				<option value="file1">yadro.com/course/api/adapters/db/db.go (0.0%)</option>
 				
-				<option value="file2">yadro.com/course/api/adapters/rest/api.go (60.8%)</option>
+				<option value="file2">yadro.com/course/api/adapters/rest/api.go (76.9%)</option>
 				
 				<option value="file3">yadro.com/course/api/adapters/rest/middleware/auth.go (100.0%)</option>
 				
@@ -79,51 +79,49 @@
 				
 				<option value="file11">yadro.com/course/api/config/config.go (75.0%)</option>
 				
-				<option value="file12">yadro.com/course/api/docs/docs.go (0.0%)</option>
+				<option value="file12">yadro.com/course/frontend/config/config.go (0.0%)</option>
 				
-				<option value="file13">yadro.com/course/frontend/config/config.go (0.0%)</option>
+				<option value="file13">yadro.com/course/frontend/handlers/handlers.go (69.9%)</option>
 				
-				<option value="file14">yadro.com/course/frontend/handlers/handlers.go (69.9%)</option>
+				<option value="file14">yadro.com/course/frontend/main.go (0.0%)</option>
 				
-				<option value="file15">yadro.com/course/frontend/main.go (0.0%)</option>
+				<option value="file15">yadro.com/course/pkg/tracing/tracing.go (0.0%)</option>
 				
-				<option value="file16">yadro.com/course/pkg/tracing/tracing.go (0.0%)</option>
+				<option value="file16">yadro.com/course/search/adapters/broker/broker.go (0.0%)</option>
 				
-				<option value="file17">yadro.com/course/search/adapters/broker/broker.go (0.0%)</option>
+				<option value="file17">yadro.com/course/search/adapters/cache/noop.go (100.0%)</option>
 				
-				<option value="file18">yadro.com/course/search/adapters/cache/noop.go (0.0%)</option>
+				<option value="file18">yadro.com/course/search/adapters/cache/redis.go (77.8%)</option>
 				
-				<option value="file19">yadro.com/course/search/adapters/cache/redis.go (0.0%)</option>
+				<option value="file19">yadro.com/course/search/adapters/db/storage.go (0.0%)</option>
 				
-				<option value="file20">yadro.com/course/search/adapters/db/storage.go (0.0%)</option>
+				<option value="file20">yadro.com/course/search/adapters/grpc/server.go (100.0%)</option>
 				
-				<option value="file21">yadro.com/course/search/adapters/grpc/server.go (100.0%)</option>
+				<option value="file21">yadro.com/course/search/adapters/initiator/initiator.go (100.0%)</option>
 				
-				<option value="file22">yadro.com/course/search/adapters/initiator/initiator.go (100.0%)</option>
+				<option value="file22">yadro.com/course/search/adapters/words/words.go (55.6%)</option>
 				
-				<option value="file23">yadro.com/course/search/adapters/words/words.go (55.6%)</option>
+				<option value="file23">yadro.com/course/search/config/config.go (66.7%)</option>
 				
-				<option value="file24">yadro.com/course/search/config/config.go (66.7%)</option>
+				<option value="file24">yadro.com/course/search/core/service.go (93.3%)</option>
 				
-				<option value="file25">yadro.com/course/search/core/service.go (93.3%)</option>
+				<option value="file25">yadro.com/course/update/adapters/broker/broker.go (0.0%)</option>
 				
-				<option value="file26">yadro.com/course/update/adapters/broker/broker.go (0.0%)</option>
+				<option value="file26">yadro.com/course/update/adapters/db/migrations.go (0.0%)</option>
 				
-				<option value="file27">yadro.com/course/update/adapters/db/migrations.go (0.0%)</option>
+				<option value="file27">yadro.com/course/update/adapters/db/storage.go (0.0%)</option>
 				
-				<option value="file28">yadro.com/course/update/adapters/db/storage.go (0.0%)</option>
+				<option value="file28">yadro.com/course/update/adapters/grpc/server.go (95.5%)</option>
 				
-				<option value="file29">yadro.com/course/update/adapters/grpc/server.go (95.5%)</option>
+				<option value="file29">yadro.com/course/update/adapters/words/words.go (63.6%)</option>
 				
-				<option value="file30">yadro.com/course/update/adapters/words/words.go (63.6%)</option>
+				<option value="file30">yadro.com/course/update/adapters/xkcd/xkcd.go (78.4%)</option>
 				
-				<option value="file31">yadro.com/course/update/adapters/xkcd/xkcd.go (78.4%)</option>
+				<option value="file31">yadro.com/course/update/config/config.go (80.0%)</option>
 				
-				<option value="file32">yadro.com/course/update/config/config.go (80.0%)</option>
+				<option value="file32">yadro.com/course/update/core/service.go (79.7%)</option>
 				
-				<option value="file33">yadro.com/course/update/core/service.go (79.7%)</option>
-				
-				<option value="file34">yadro.com/course/words/words/words.go (100.0%)</option>
+				<option value="file33">yadro.com/course/words/words/words.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -377,8 +375,8 @@ type UserRegistrar interface {
         CreateUser(ctx context.Context, username, password string) error
 }
 
-func NewRegisterHandler(log *slog.Logger, storage UserRegistrar) http.HandlerFunc <span class="cov0" title="0">{
-        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+func NewRegisterHandler(log *slog.Logger, storage UserRegistrar) http.HandlerFunc <span class="cov6" title="3">{
+        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov6" title="3">{
                 var req struct {
                         Name     string `json:"name"`
                         Password string `json:"password"`
@@ -387,21 +385,21 @@ func NewRegisterHandler(log *slog.Logger, storage UserRegistrar) http.HandlerFun
                         http.Error(w, "invalid request body", http.StatusBadRequest)
                         return
                 }</span>
-                <span class="cov0" title="0">if req.Name == "" || req.Password == "" </span><span class="cov0" title="0">{
+                <span class="cov6" title="3">if req.Name == "" || req.Password == "" </span><span class="cov1" title="1">{
                         http.Error(w, "name and password are required", http.StatusBadRequest)
                         return
                 }</span>
-                <span class="cov0" title="0">if err := storage.CreateUser(r.Context(), req.Name, req.Password); err != nil </span><span class="cov0" title="0">{
+                <span class="cov4" title="2">if err := storage.CreateUser(r.Context(), req.Name, req.Password); err != nil </span><span class="cov1" title="1">{
                         log.Error("register failed", "error", err)
                         http.Error(w, "user already exists or internal error", http.StatusConflict)
                         return
                 }</span>
-                <span class="cov0" title="0">w.WriteHeader(http.StatusCreated)</span>
+                <span class="cov1" title="1">w.WriteHeader(http.StatusCreated)</span>
         }
 }
 
-func NewUserLoginHandler(log *slog.Logger, auth Authenticator, checker UserChecker) http.HandlerFunc <span class="cov0" title="0">{
-        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+func NewUserLoginHandler(log *slog.Logger, auth Authenticator, checker UserChecker) http.HandlerFunc <span class="cov4" title="2">{
+        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov4" title="2">{
                 var req struct {
                         Name     string `json:"name"`
                         Password string `json:"password"`
@@ -410,15 +408,15 @@ func NewUserLoginHandler(log *slog.Logger, auth Authenticator, checker UserCheck
                         http.Error(w, "invalid request body", http.StatusBadRequest)
                         return
                 }</span>
-                <span class="cov0" title="0">token, err := auth.LoginFromDB(req.Name, req.Password, func(name, password string) error </span><span class="cov0" title="0">{
+                <span class="cov4" title="2">token, err := auth.LoginFromDB(req.Name, req.Password, func(name, password string) error </span><span class="cov0" title="0">{
                         return checker.CheckPassword(r.Context(), name, password)
                 }</span>)
-                <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                <span class="cov4" title="2">if err != nil </span><span class="cov1" title="1">{
                         log.Error("user login failed", "error", err)
                         http.Error(w, "unauthorized", http.StatusUnauthorized)
                         return
                 }</span>
-                <span class="cov0" title="0">w.Header().Set("Content-Type", "text/plain")
+                <span class="cov1" title="1">w.Header().Set("Content-Type", "text/plain")
                 if _, err := w.Write([]byte(token)); err != nil </span><span class="cov0" title="0">{
                         log.Error("failed to write token", "error", err)
                 }</span>
@@ -1093,499 +1091,7 @@ func MustLoad(configPath string) Config <span class="cov10" title="2">{
 }
 </pre>
 		
-		<pre class="file" id="file12" style="display: none">// Package docs Code generated by swaggo/swag. DO NOT EDIT
-package docs
-
-import "github.com/swaggo/swag"
-
-const docTemplate = `{
-    "schemes": {{ marshal .Schemes }},
-    "swagger": "2.0",
-    "info": {
-        "description": "{{escape .Description}}",
-        "title": "{{.Title}}",
-        "contact": {},
-        "version": "{{.Version}}"
-    },
-    "host": "{{.Host}}",
-    "basePath": "{{.BasePath}}",
-    "paths": {
-        "/api/db": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete all comics and words from the database, resets the search index and cache",
-                "tags": [
-                    "admin"
-                ],
-                "summary": "Drop database",
-                "responses": {
-                    "200": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "internal server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/db/stats": {
-            "get": {
-                "description": "Returns total and fetched comics count, total and unique words count",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "Database stats",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.StatsResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "internal server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/db/status": {
-            "get": {
-                "description": "Returns current update status: idle or running",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admin"
-                ],
-                "summary": "Update status",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.StatusResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "internal server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/db/update": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Fetch new comics from xkcd.com and store them. Runs asynchronously — returns 202 if already running",
-                "tags": [
-                    "admin"
-                ],
-                "summary": "Update database",
-                "responses": {
-                    "200": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "202": {
-                        "description": "already running",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "internal server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/isearch": {
-            "get": {
-                "description": "Search XKCD comics using in-memory index, faster but requires index to be built",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "search"
-                ],
-                "summary": "Index search",
-                "parameters": [
-                    {
-                        "minLength": 1,
-                        "type": "string",
-                        "description": "Search phrase",
-                        "name": "phrase",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Max number of results",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.SearchResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "phrase is required",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "internal server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/login": {
-            "post": {
-                "description": "Login with admin credentials (from env ADMIN_USER/ADMIN_PASSWORD), returns JWT token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "text/plain"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Admin login",
-                "parameters": [
-                    {
-                        "description": "Admin credentials",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/rest.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "eyJhbGciOiJIUzI1NiJ9...",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "invalid request body",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/register": {
-            "post": {
-                "description": "Create a new user account with bcrypt-hashed password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "text/plain"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Register user",
-                "parameters": [
-                    {
-                        "description": "New user credentials",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/rest.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "created",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "name and password are required",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "409": {
-                        "description": "user already exists or internal error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/search": {
-            "get": {
-                "description": "Search XKCD comics by phrase using full-text search against the database",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "search"
-                ],
-                "summary": "Search comics",
-                "parameters": [
-                    {
-                        "minLength": 1,
-                        "type": "string",
-                        "description": "Search phrase",
-                        "name": "phrase",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Max number of results",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/rest.SearchResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "phrase is required",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "internal server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/user/login": {
-            "post": {
-                "description": "Login with registered user credentials, returns JWT token valid for searching",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "text/plain"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "User login",
-                "parameters": [
-                    {
-                        "description": "User credentials",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/rest.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "eyJhbGciOiJIUzI1NiJ9...",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "invalid request body",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        }
-    },
-    "definitions": {
-        "rest.ComicsItem": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer",
-                    "example": 353
-                },
-                "url": {
-                    "type": "string",
-                    "example": "https://imgs.xkcd.com/comics/python.png"
-                }
-            }
-        },
-        "rest.LoginRequest": {
-            "description": "Login credentials for admin or user",
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "minLength": 1,
-                    "example": "admin"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 1,
-                    "example": "password"
-                }
-            }
-        },
-        "rest.SearchResponse": {
-            "type": "object",
-            "properties": {
-                "comics": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/rest.ComicsItem"
-                    }
-                },
-                "total": {
-                    "type": "integer",
-                    "example": 5
-                }
-            }
-        },
-        "rest.StatsResponse": {
-            "type": "object",
-            "properties": {
-                "comics_fetched": {
-                    "type": "integer",
-                    "example": 3241
-                },
-                "comics_total": {
-                    "type": "integer",
-                    "example": 3241
-                },
-                "words_total": {
-                    "type": "integer",
-                    "example": 148234
-                },
-                "words_unique": {
-                    "type": "integer",
-                    "example": 9412
-                }
-            }
-        },
-        "rest.StatusResponse": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "idle",
-                        "running"
-                    ],
-                    "example": "idle"
-                }
-            }
-        }
-    },
-    "securityDefinitions": {
-        "BearerAuth": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
-        }
-    }
-}`
-
-// SwaggerInfo holds exported Swagger Info so clients can modify it
-var SwaggerInfo = &amp;swag.Spec{
-        Version:          "1.0",
-        Host:             "localhost:28080",
-        BasePath:         "/",
-        Schemes:          []string{},
-        Title:            "XKCD Search API",
-        Description:      "API for searching XKCD comics",
-        InfoInstanceName: "swagger",
-        SwaggerTemplate:  docTemplate,
-        LeftDelim:        "{{",
-        RightDelim:       "}}",
-}
-
-func init() <span class="cov0" title="0">{
-        swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
-}</span>
-</pre>
-		
-		<pre class="file" id="file13" style="display: none">package config
+		<pre class="file" id="file12" style="display: none">package config
 
 import (
         "log"
@@ -1610,7 +1116,7 @@ func MustLoad(configPath string) Config <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file14" style="display: none">package handlers
+		<pre class="file" id="file13" style="display: none">package handlers
 
 import (
         "bytes"
@@ -1976,7 +1482,7 @@ func (h *Handler) render(w http.ResponseWriter, name string, data any) <span cla
 }
 </pre>
 		
-		<pre class="file" id="file15" style="display: none">package main
+		<pre class="file" id="file14" style="display: none">package main
 
 import (
         "context"
@@ -2062,7 +1568,7 @@ func mustMakeLogger(logLevel string) *slog.Logger <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file16" style="display: none">package tracing
+		<pre class="file" id="file15" style="display: none">package tracing
 
 import (
         "context"
@@ -2100,7 +1606,7 @@ func Init(ctx context.Context, serviceName, endpoint string) (func(context.Conte
 }
 </pre>
 		
-		<pre class="file" id="file17" style="display: none">package broker
+		<pre class="file" id="file16" style="display: none">package broker
 
 import (
         "context"
@@ -2175,7 +1681,7 @@ func (s *Subscriber) Run(ctx context.Context) <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file18" style="display: none">package cache
+		<pre class="file" id="file17" style="display: none">package cache
 
 import (
         "context"
@@ -2185,12 +1691,12 @@ import (
 
 type Noop struct{}
 
-func (Noop) Get(_ context.Context, _ string) ([]core.Comics, bool, error) <span class="cov0" title="0">{ return nil, false, nil }</span>
-func (Noop) Set(_ context.Context, _ string, _ []core.Comics) error        <span class="cov0" title="0">{ return nil }</span>
-func (Noop) Flush(_ context.Context) error                                 <span class="cov0" title="0">{ return nil }</span>
+func (Noop) Get(_ context.Context, _ string) ([]core.Comics, bool, error) <span class="cov8" title="1">{ return nil, false, nil }</span>
+func (Noop) Set(_ context.Context, _ string, _ []core.Comics) error        <span class="cov8" title="1">{ return nil }</span>
+func (Noop) Flush(_ context.Context) error                                 <span class="cov8" title="1">{ return nil }</span>
 </pre>
 		
-		<pre class="file" id="file19" style="display: none">package cache
+		<pre class="file" id="file18" style="display: none">package cache
 
 import (
         "context"
@@ -2207,48 +1713,48 @@ type Redis struct {
         client *redis.Client
 }
 
-func New(address string) (*Redis, error) <span class="cov0" title="0">{
+func New(address string) (*Redis, error) <span class="cov10" title="4">{
         client := redis.NewClient(&amp;redis.Options{Addr: address})
         if err := client.Ping(context.Background()).Err(); err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
 
-        <span class="cov0" title="0">return &amp;Redis{client: client}, nil</span>
+        <span class="cov10" title="4">return &amp;Redis{client: client}, nil</span>
 }
 
-func (r *Redis) Get(ctx context.Context, key string) ([]core.Comics, bool, error) <span class="cov0" title="0">{
+func (r *Redis) Get(ctx context.Context, key string) ([]core.Comics, bool, error) <span class="cov10" title="4">{
         data, err := r.client.Get(ctx, key).Bytes()
-        if err == redis.Nil </span><span class="cov0" title="0">{
+        if err == redis.Nil </span><span class="cov5" title="2">{
                 return nil, false, nil
         }</span>
 
-        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+        <span class="cov5" title="2">if err != nil </span><span class="cov0" title="0">{
                 return nil, false, err
         }</span>
 
-        <span class="cov0" title="0">var comics []core.Comics
+        <span class="cov5" title="2">var comics []core.Comics
         if err := json.Unmarshal(data, &amp;comics); err != nil </span><span class="cov0" title="0">{
                 return nil, false, err
         }</span>
 
-        <span class="cov0" title="0">return comics, true, nil</span>
+        <span class="cov5" title="2">return comics, true, nil</span>
 }
 
-func (r *Redis) Set(ctx context.Context, key string, comics []core.Comics) error <span class="cov0" title="0">{
+func (r *Redis) Set(ctx context.Context, key string, comics []core.Comics) error <span class="cov8" title="3">{
         data, err := json.Marshal(comics)
         if err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
 
-        <span class="cov0" title="0">return r.client.Set(ctx, key, data, ttl).Err()</span>
+        <span class="cov8" title="3">return r.client.Set(ctx, key, data, ttl).Err()</span>
 }
 
-func (r *Redis) Flush(ctx context.Context) error <span class="cov0" title="0">{
+func (r *Redis) Flush(ctx context.Context) error <span class="cov1" title="1">{
         return r.client.FlushDB(ctx).Err()
 }</span>
 </pre>
 		
-		<pre class="file" id="file20" style="display: none">package db
+		<pre class="file" id="file19" style="display: none">package db
 
 import (
         "context"
@@ -2330,7 +1836,7 @@ func (db *DB) AllComics(ctx context.Context) ([]core.IndexComic, error) <span cl
 }
 </pre>
 		
-		<pre class="file" id="file21" style="display: none">package grpc
+		<pre class="file" id="file20" style="display: none">package grpc
 
 import (
         "context"
@@ -2386,7 +1892,7 @@ func (s *Server) ISearch(ctx context.Context, req *searchpb.SearchRequest) (*sea
 }
 </pre>
 		
-		<pre class="file" id="file22" style="display: none">package initiator
+		<pre class="file" id="file21" style="display: none">package initiator
 
 import (
         "context"
@@ -2428,7 +1934,7 @@ func (i *Initiator) build(ctx context.Context) <span class="cov10" title="6">{
 }
 </pre>
 		
-		<pre class="file" id="file23" style="display: none">package words
+		<pre class="file" id="file22" style="display: none">package words
 
 import (
         "context"
@@ -2468,7 +1974,7 @@ func (c *Client) Norm(ctx context.Context, phrase string) ([]string, error) <spa
 }
 </pre>
 		
-		<pre class="file" id="file24" style="display: none">package config
+		<pre class="file" id="file23" style="display: none">package config
 
 import (
         "log/slog"
@@ -2501,7 +2007,7 @@ func MustLoad(configPath string) Config <span class="cov10" title="2">{
 }
 </pre>
 		
-		<pre class="file" id="file25" style="display: none">package core
+		<pre class="file" id="file24" style="display: none">package core
 
 import (
         "context"
@@ -2626,7 +2132,7 @@ func (s *Service) ISearch(ctx context.Context, phrase string, limit int) ([]Comi
 }
 </pre>
 		
-		<pre class="file" id="file26" style="display: none">package broker
+		<pre class="file" id="file25" style="display: none">package broker
 
 import (
         "log/slog"
@@ -2680,7 +2186,7 @@ func (p *Publisher) Close() <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file27" style="display: none">package db
+		<pre class="file" id="file26" style="display: none">package db
 
 import (
         "embed"
@@ -2723,7 +2229,7 @@ func (db *DB) Migrate() error <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file28" style="display: none">package db
+		<pre class="file" id="file27" style="display: none">package db
 
 import (
         "context"
@@ -2798,7 +2304,7 @@ func (db *DB) Drop(ctx context.Context) error <span class="cov0" title="0">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file29" style="display: none">package grpc
+		<pre class="file" id="file28" style="display: none">package grpc
 
 import (
         "context"
@@ -2870,7 +2376,7 @@ func (s *Server) Drop(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, er
 }
 </pre>
 		
-		<pre class="file" id="file30" style="display: none">package words
+		<pre class="file" id="file29" style="display: none">package words
 
 import (
         "context"
@@ -2916,7 +2422,7 @@ func (c Client) Ping(ctx context.Context) error <span class="cov4" title="2">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file31" style="display: none">package xkcd
+		<pre class="file" id="file30" style="display: none">package xkcd
 
 import (
         "context"
@@ -3023,7 +2529,7 @@ func (c Client) LastID(ctx context.Context) (int, error) <span class="cov4" titl
 }
 </pre>
 		
-		<pre class="file" id="file32" style="display: none">package config
+		<pre class="file" id="file31" style="display: none">package config
 
 import (
         "log"
@@ -3059,7 +2565,7 @@ func MustLoad(configPath string) Config <span class="cov10" title="2">{
 }
 </pre>
 		
-		<pre class="file" id="file33" style="display: none">package core
+		<pre class="file" id="file32" style="display: none">package core
 
 import (
         "context"
@@ -3211,7 +2717,7 @@ func (s *Service) Drop(ctx context.Context) error <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file34" style="display: none">package words
+		<pre class="file" id="file33" style="display: none">package words
 
 import (
         "strings"
