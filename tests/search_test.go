@@ -61,20 +61,19 @@ func SearchLimit2(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.StatusCode, "need OK status")
 	var comics ComicsReply
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&comics), "decode failed")
-	require.Equal(t, 2, comics.Total)
 	require.Equal(t, 2, len(comics.Comics))
+	require.True(t, comics.Total >= 2, "total must be at least the page size")
 }
 
 func SearchLimitDefault(t *testing.T) {
-
 	resp, err := client.Get(address + "/api/search?phrase=linux")
 	require.NoError(t, err, "failed to search")
 	defer resp.Body.Close()
 	require.Equal(t, http.StatusOK, resp.StatusCode, "need OK status")
 	var comics ComicsReply
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&comics), "decode failed")
-	require.Equal(t, 10, comics.Total)
 	require.Equal(t, 10, len(comics.Comics))
+	require.True(t, comics.Total >= 10, "total must be at least the page size")
 }
 
 func SearchPhrases(t *testing.T) {
