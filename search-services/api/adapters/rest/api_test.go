@@ -226,3 +226,57 @@ func TestISearchHandler_OK(t *testing.T) {
 	h(w, httptest.NewRequest(http.MethodGet, "/api/isearch?phrase=linux", nil))
 	require.Equal(t, http.StatusOK, w.Code)
 }
+
+type mockUserStorage struct {
+	createErr     error
+	checkErr      error
+}
+
+func (m *mockUserStorage) CreateUser(_ context.Context, _, _ string) error { return m.createErr }
+func (m *mockUserStorage) CheckPassword(_ context.Context, _, _ string) error { return m.checkErr }
+
+// Успешная регистрация возвращает 201
+func TestRegisterHandler_Success(t *testing.T) {
+	h := rest.NewRegisterHandler(log, &mockUserStorage{})
+	body := bytes.NewBufferString(`{"name":"user","password":"pass"}`)
+	w := httptest.NewRecorder()
+	h(w, httptest.NewRequest(http.MethodPost, "/api/register", body))
+	require.Equal(t, http.StatusCreated, w.Code)
+}
+
+// Пустые поля возвращают 400
+func TestRegisterHandler_EmptyFields(t *testing.T) {
+	h := rest.NewRegisterHandler(log, &mockUserStorage{})
+	body := bytes.NewBufferString(`{"name":"","password":""}`)
+	w := httptest.NewRecorder()
+	h(w, httptest.NewRequest(http.MethodPost, "/api/register", body))
+	require.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// Дублирующийся пользователь возвращает 409
+func TestRegisterHandler_Duplicate(t *testing.T) {
+	h := rest.NewRegisterHandler(log, &mockUserStorage{createErr: fmt.Errorf("duplicate")})
+	body := bytes.NewBufferString(`{"name":"user","password":"pass"}`)
+	w := httptest.NewRecorder()
+	h(w, httptest.NewRequest(http.MethodPost, "/api/register", body))
+	require.Equal(t, http.StatusConflict, w.Code)
+}
+
+// Успешный логин пользователя возвращает 200 и токен
+func TestUserLoginHandler_Success(t *testing.T) {
+	h := rest.NewUserLoginHandler(log, &mockAuth{token: "mytoken"}, &mockUserStorage{})
+	body := bytes.NewBufferString(`{"name":"user","password":"pass"}`)
+	w := httptest.NewRecorder()
+	h(w, httptest.NewRequest(http.MethodPost, "/api/user/login", body))
+	require.Equal(t, http.StatusOK, w.Code)
+	require.Equal(t, "mytoken", w.Body.String())
+}
+
+// Неверный пароль возвращает 401
+func TestUserLoginHandler_WrongPassword(t *testing.T) {
+	h := rest.NewUserLoginHandler(log, &mockAuth{err: fmt.Errorf("invalid")}, &mockUserStorage{checkErr: fmt.Errorf("wrong")})
+	body := bytes.NewBufferString(`{"name":"user","password":"wrong"}`)
+	w := httptest.NewRecorder()
+	h(w, httptest.NewRequest(http.MethodPost, "/api/user/login", body))
+	require.Equal(t, http.StatusUnauthorized, w.Code)
+}

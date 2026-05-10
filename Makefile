@@ -37,7 +37,7 @@ swag:
 	@echo "swagger docs generated at search-services/api/docs/"
 
 coverage:
-	go tool cover -func search-services/cover.out | tail -1
+	cd search-services && go tool cover -func cover.out | tail -1
 
 tools:
 	go install github.com/yoheimuta/protolint/cmd/protolint@latest

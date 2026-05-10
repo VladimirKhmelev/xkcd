@@ -1,6 +1,6 @@
 test:
 	go test -race -coverprofile cover.out \
-		$(shell go list ./... | grep -Ev 'yadro.com/course/(proto|api$$|update$$|words$$|search$$)')
+		$(shell go list ./... | grep -Ev 'yadro.com/course/(proto|api$$|update$$|words$$|search$$|api/docs)')
 	go tool cover -html cover.out -o cover.html
 
 lint: protolint golint
