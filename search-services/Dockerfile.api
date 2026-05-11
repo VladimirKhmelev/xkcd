@@ -21,7 +21,7 @@ RUN cd /src && \
 ENV CGO_ENABLED=0
 RUN cd /src && go build -o /api ./api
 
-FROM alpine:3.20
+FROM alpine:3.23
 
 COPY --from=build /api /api
 
