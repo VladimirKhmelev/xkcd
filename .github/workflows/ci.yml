@@ -51,7 +51,7 @@ jobs:
           awk "BEGIN { if ($COVERAGE+0 < 50) { print \"Coverage \" $COVERAGE \"% is below 50%\"; exit 1 } }"
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: cover.html
@@ -118,7 +118,7 @@ jobs:
 
       - name: Upload swagger docs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: swagger-docs
           path: |
