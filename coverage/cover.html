@@ -2617,12 +2617,13 @@ type XKCD struct {
 }
 
 type Config struct {
-        LogLevel      string `yaml:"log_level" env:"LOG_LEVEL" env-default:"DEBUG"`
-        Address       string `yaml:"update_address" env:"UPDATE_ADDRESS" env-default:"localhost:80"`
-        XKCD          XKCD   `yaml:"xkcd"`
-        DBAddress     string `yaml:"db_address" env:"DB_ADDRESS" env-default:"localhost:82"`
-        WordsAddress  string `yaml:"words_address" env:"WORDS_ADDRESS" env-default:"localhost:81"`
-        BrokerAddress string `yaml:"broker_address" env:"BROKER_ADDRESS" env-default:"nats://localhost:4222"`
+        LogLevel       string `yaml:"log_level"       env:"LOG_LEVEL"        env-default:"DEBUG"`
+        Address        string `yaml:"update_address"  env:"UPDATE_ADDRESS"   env-default:"localhost:80"`
+        MetricsAddress string `yaml:"metrics_address" env:"METRICS_ADDRESS"  env-default:":9090"`
+        XKCD           XKCD   `yaml:"xkcd"`
+        DBAddress      string `yaml:"db_address"      env:"DB_ADDRESS"       env-default:"localhost:82"`
+        WordsAddress   string `yaml:"words_address"   env:"WORDS_ADDRESS"    env-default:"localhost:81"`
+        BrokerAddress  string `yaml:"broker_address"  env:"BROKER_ADDRESS"   env-default:"nats://localhost:4222"`
 }
 
 func MustLoad(configPath string) Config <span class="cov10" title="2">{
@@ -2644,6 +2645,15 @@ import (
         "log/slog"
         "sync"
         "sync/atomic"
+        "time"
+
+        "github.com/VictoriaMetrics/metrics"
+)
+
+var (
+        updateDuration     = metrics.NewHistogram(`update_duration_seconds`)
+        updateFetchedTotal = metrics.NewCounter(`update_comics_fetched_total`)
+        updateErrorsTotal  = metrics.NewCounter(`update_errors_total`)
 )
 
 type Service struct {
@@ -2676,9 +2686,13 @@ func (s *Service) Update(ctx context.Context) (err error) <span class="cov6" tit
         if !s.isRunning.CompareAndSwap(false, true) </span><span class="cov1" title="1">{
                 return ErrUpdateRunning
         }</span>
-        <span class="cov5" title="3">defer s.isRunning.Store(false)
+        <span class="cov5" title="3">start := time.Now()
+        defer func() </span><span class="cov5" title="3">{
+                s.isRunning.Store(false)
+                updateDuration.Update(time.Since(start).Seconds())
+        }</span>()
 
-        lastID, err := s.xkcd.LastID(ctx)
+        <span class="cov5" title="3">lastID, err := s.xkcd.LastID(ctx)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to get last ID: %w", err)
         }</span>
@@ -2741,6 +2755,9 @@ func (s *Service) Update(ctx context.Context) (err error) <span class="cov6" tit
                                         Words: keywords,
                                 }); err != nil </span><span class="cov0" title="0">{
                                         s.log.Warn("Failed to save comic", "id", id, "error", err)
+                                        updateErrorsTotal.Inc()
+                                }</span> else<span class="cov3" title="2"> {
+                                        updateFetchedTotal.Inc()
                                 }</span>
                         }
                 })
