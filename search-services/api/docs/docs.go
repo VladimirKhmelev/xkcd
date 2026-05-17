@@ -108,7 +108,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Fetch new comics from xkcd.com and store them. Runs asynchronously — returns 202 if already running",
+                "description": "Fetch missing comics from xkcd.com and store them. Blocking — returns 200 when done. Returns 202 immediately if an update is already in progress.",
                 "tags": [
                     "admin"
                 ],
@@ -121,7 +121,7 @@ const docTemplate = `{
                         }
                     },
                     "202": {
-                        "description": "already running",
+                        "description": "update already in progress",
                         "schema": {
                             "type": "string"
                         }
@@ -143,7 +143,7 @@ const docTemplate = `{
         },
         "/api/isearch": {
             "get": {
-                "description": "Search XKCD comics using in-memory index, faster but requires index to be built",
+                "description": "Searches the in-memory index — faster than /api/search but requires the index to be built first (happens automatically after DB update). Limited to 100 rps; returns 503 when exceeded.",
                 "produces": [
                     "application/json"
                 ],
@@ -174,17 +174,23 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.SearchResponse"
+                            "$ref": "#/definitions/rest.ISearchResponse"
                         }
                     },
                     "400": {
-                        "description": "phrase is required",
+                        "description": "phrase is required / invalid limit",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
                         "description": "internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "503": {
+                        "description": "service unavailable (rate limit exceeded)",
                         "schema": {
                             "type": "string"
                         }
@@ -238,6 +244,26 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/ping": {
+            "get": {
+                "description": "Checks connectivity to all internal services (search, update, words)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.PingResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/register": {
             "post": {
                 "description": "Create a new user account with bcrypt-hashed password",
@@ -286,7 +312,7 @@ const docTemplate = `{
         },
         "/api/search": {
             "get": {
-                "description": "Search XKCD comics by phrase using full-text search against the database",
+                "description": "Full-text search against the database. Results are paginated — use page and limit to navigate. Returns 503 when concurrency limit (10 simultaneous requests) is reached.",
                 "produces": [
                     "application/json"
                 ],
@@ -308,8 +334,16 @@ const docTemplate = `{
                         "minimum": 1,
                         "type": "integer",
                         "default": 10,
-                        "description": "Max number of results",
+                        "description": "Results per page",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
                         "in": "query"
                     }
                 ],
@@ -321,13 +355,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "phrase is required",
+                        "description": "phrase is required / invalid limit / invalid page",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
                         "description": "internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "503": {
+                        "description": "service unavailable (concurrency limit reached)",
                         "schema": {
                             "type": "string"
                         }
@@ -396,6 +436,21 @@ const docTemplate = `{
                 }
             }
         },
+        "rest.ISearchResponse": {
+            "type": "object",
+            "properties": {
+                "comics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/rest.ComicsItem"
+                    }
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 7
+                }
+            }
+        },
         "rest.LoginRequest": {
             "description": "Login credentials for admin or user",
             "type": "object",
@@ -412,6 +467,22 @@ const docTemplate = `{
                 }
             }
         },
+        "rest.PingResponse": {
+            "type": "object",
+            "properties": {
+                "replies": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "example": {
+                        "search": "ok",
+                        "update": "ok",
+                        "words": "ok"
+                    }
+                }
+            }
+        },
         "rest.SearchResponse": {
             "type": "object",
             "properties": {
@@ -421,9 +492,17 @@ const docTemplate = `{
                         "$ref": "#/definitions/rest.ComicsItem"
                     }
                 },
-                "total": {
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pages": {
                     "type": "integer",
                     "example": 5
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 42
                 }
             }
         },
