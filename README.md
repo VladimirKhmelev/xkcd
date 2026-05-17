@@ -81,7 +81,9 @@ xdg-open cover.html
 
 Готовый дашборд Grafana лежит в `metrics/dashboard.json` — импортируйте через **Dashboards → Import → Upload JSON file**.
 
-![Grafana Dashboard](metrics/grafana.png)
+![API](metrics/grafana_api.png)
+![Search](metrics/grafana_search.png)
+![Update](metrics/grafana_update.png)
 
 ## Стек технологий
 

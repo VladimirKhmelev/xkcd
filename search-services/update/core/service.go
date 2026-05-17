@@ -6,6 +6,15 @@ import (
 	"log/slog"
 	"sync"
 	"sync/atomic"
+	"time"
+
+	"github.com/VictoriaMetrics/metrics"
+)
+
+var (
+	updateDuration     = metrics.NewHistogram(`update_duration_seconds`)
+	updateFetchedTotal = metrics.NewCounter(`update_comics_fetched_total`)
+	updateErrorsTotal  = metrics.NewCounter(`update_errors_total`)
 )
 
 type Service struct {
@@ -38,7 +47,11 @@ func (s *Service) Update(ctx context.Context) (err error) {
 	if !s.isRunning.CompareAndSwap(false, true) {
 		return ErrUpdateRunning
 	}
-	defer s.isRunning.Store(false)
+	start := time.Now()
+	defer func() {
+		s.isRunning.Store(false)
+		updateDuration.Update(time.Since(start).Seconds())
+	}()
 
 	lastID, err := s.xkcd.LastID(ctx)
 	if err != nil {
@@ -103,6 +116,9 @@ func (s *Service) Update(ctx context.Context) (err error) {
 					Words: keywords,
 				}); err != nil {
 					s.log.Warn("Failed to save comic", "id", id, "error", err)
+					updateErrorsTotal.Inc()
+				} else {
+					updateFetchedTotal.Inc()
 				}
 			}
 		})
