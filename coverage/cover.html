@@ -103,7 +103,7 @@
 				
 				<option value="file23">yadro.com/course/search/config/config.go (66.7%)</option>
 				
-				<option value="file24">yadro.com/course/search/core/service.go (90.8%)</option>
+				<option value="file24">yadro.com/course/search/core/service.go (88.2%)</option>
 				
 				<option value="file25">yadro.com/course/update/adapters/broker/broker.go (0.0%)</option>
 				
@@ -2019,14 +2019,15 @@ import (
 )
 
 type Config struct {
-        LogLevel      string        `yaml:"log_level"      env:"LOG_LEVEL"       env-default:"DEBUG"`
-        Address       string        `yaml:"search_address" env:"SEARCH_ADDRESS"  env-default:"localhost:83"`
-        DBAddress     string        `yaml:"db_address"     env:"DB_ADDRESS"      env-default:"localhost:5432"`
-        WordsAddress  string        `yaml:"words_address"  env:"WORDS_ADDRESS"   env-default:"localhost:81"`
-        IndexTTL      time.Duration `yaml:"index_ttl"      env:"INDEX_TTL"       env-default:"5m"`
-        BrokerAddress string        `yaml:"broker_address" env:"BROKER_ADDRESS"  env-default:"nats://localhost:4222"`
-        RedisAddress  string        `yaml:"redis_address"  env:"REDIS_ADDRESS"   env-default:"localhost:6379"`
-        OTLPEndpoint  string        `yaml:"otlp_endpoint"  env:"OTLP_ENDPOINT"   env-default:""`
+        LogLevel       string        `yaml:"log_level"       env:"LOG_LEVEL"        env-default:"DEBUG"`
+        Address        string        `yaml:"search_address"  env:"SEARCH_ADDRESS"   env-default:"localhost:83"`
+        MetricsAddress string        `yaml:"metrics_address" env:"METRICS_ADDRESS"  env-default:":9090"`
+        DBAddress      string        `yaml:"db_address"      env:"DB_ADDRESS"       env-default:"localhost:5432"`
+        WordsAddress   string        `yaml:"words_address"   env:"WORDS_ADDRESS"    env-default:"localhost:81"`
+        IndexTTL       time.Duration `yaml:"index_ttl"       env:"INDEX_TTL"        env-default:"5m"`
+        BrokerAddress  string        `yaml:"broker_address"  env:"BROKER_ADDRESS"   env-default:"nats://localhost:4222"`
+        RedisAddress   string        `yaml:"redis_address"   env:"REDIS_ADDRESS"    env-default:"localhost:6379"`
+        OTLPEndpoint   string        `yaml:"otlp_endpoint"   env:"OTLP_ENDPOINT"    env-default:""`
 }
 
 func MustLoad(configPath string) Config <span class="cov10" title="2">{
@@ -2049,7 +2050,27 @@ import (
         "log/slog"
         "sort"
         "sync"
+        "sync/atomic"
+
+        "github.com/VictoriaMetrics/metrics"
 )
+
+var (
+        searchCacheHits   = metrics.NewCounter(`search_cache_hits_total`)
+        searchCacheMisses = metrics.NewCounter(`search_cache_misses_total`)
+        searchQueriesDB   = metrics.NewCounter(`search_queries_total{type="db"}`)
+        searchQueriesIdx  = metrics.NewCounter(`search_queries_total{type="index"}`)
+        searchErrorsWords = metrics.NewCounter(`search_errors_total{type="words"}`)
+        searchErrorsDB    = metrics.NewCounter(`search_errors_total{type="db"}`)
+
+        indexKeywordsTotal atomic.Int64
+)
+
+func init() <span class="cov1" title="1">{
+        metrics.NewGauge(`index_keywords_total`, func() float64 </span><span class="cov0" title="0">{
+                return float64(indexKeywordsTotal.Load())
+        }</span>)
+}
 
 type Service struct {
         log   *slog.Logger
@@ -2090,14 +2111,19 @@ func (s *Service) Search(ctx context.Context, phrase string, limit, page int) ([
         cacheKey := fmt.Sprintf("search:%s:%d:%d", phrase, limit, page)
         if cached, ok, err := s.cache.Get(ctx, cacheKey); err == nil &amp;&amp; ok </span><span class="cov0" title="0">{
                 s.log.Debug("cache hit", "key", cacheKey)
+                searchCacheHits.Inc()
+                searchQueriesDB.Inc()
                 return cached.Comics, cached.Total, nil
         }</span>
+        <span class="cov3" title="2">searchCacheMisses.Inc()
 
-        <span class="cov3" title="2">comics, total, err := s.db.Search(ctx, keywords, limit, offset)
+        comics, total, err := s.db.Search(ctx, keywords, limit, offset)
         if err != nil </span><span class="cov1" title="1">{
+                searchErrorsDB.Inc()
                 return nil, 0, err
         }</span>
-        <span class="cov1" title="1">if err := s.cache.Set(ctx, cacheKey, CachedResult{Comics: comics, Total: total}); err != nil </span><span class="cov0" title="0">{
+        <span class="cov1" title="1">searchQueriesDB.Inc()
+        if err := s.cache.Set(ctx, cacheKey, CachedResult{Comics: comics, Total: total}); err != nil </span><span class="cov0" title="0">{
                 s.log.Warn("cache set failed", "error", err)
         }</span>
         <span class="cov1" title="1">return comics, total, nil</span>
@@ -2107,6 +2133,7 @@ func (s *Service) ResetIndex() <span class="cov1" title="1">{
         s.mu.Lock()
         s.index = make(map[string][]Comics)
         s.mu.Unlock()
+        indexKeywordsTotal.Store(0)
         if err := s.cache.Flush(context.Background()); err != nil </span><span class="cov0" title="0">{
                 s.log.Warn("cache flush failed", "error", err)
         }</span>
@@ -2128,6 +2155,7 @@ func (s *Service) BuildIndex(ctx context.Context) error <span class="cov6" title
         <span class="cov6" title="4">s.mu.Lock()
         s.index = newIndex
         s.mu.Unlock()
+        indexKeywordsTotal.Store(int64(len(newIndex)))
         s.log.Info("index built", "keywords", len(newIndex))
         return nil</span>
 }
@@ -2135,13 +2163,15 @@ func (s *Service) BuildIndex(ctx context.Context) error <span class="cov6" title
 func (s *Service) ISearch(ctx context.Context, phrase string, limit int) ([]Comics, error) <span class="cov7" title="6">{
         keywords, err := s.words.Norm(ctx, phrase)
         if err != nil </span><span class="cov1" title="1">{
+                searchErrorsWords.Inc()
                 return nil, fmt.Errorf("failed to normalize phrase: %w", err)
         }</span>
         <span class="cov6" title="5">if len(keywords) == 0 </span><span class="cov1" title="1">{
                 return []Comics{}, nil
         }</span>
+        <span class="cov6" title="4">searchQueriesIdx.Inc()
 
-        <span class="cov6" title="4">s.mu.RLock()
+        s.mu.RLock()
         counts := make(map[int]int)
         seen := make(map[int]Comics)
         for _, kw := range keywords </span><span class="cov6" title="5">{
