@@ -24,7 +24,7 @@ func (s *Server) Ping(_ context.Context, _ *emptypb.Empty) (*emptypb.Empty, erro
 }
 
 func (s *Server) Search(ctx context.Context, req *searchpb.SearchRequest) (*searchpb.SearchReply, error) {
-	comics, err := s.service.Search(ctx, req.Phrase, int(req.Limit))
+	comics, total, err := s.service.Search(ctx, req.Phrase, int(req.Limit), int(req.Page))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -34,7 +34,7 @@ func (s *Server) Search(ctx context.Context, req *searchpb.SearchRequest) (*sear
 	}
 	return &searchpb.SearchReply{
 		Comics: pbComics,
-		Total:  int64(len(pbComics)),
+		Total:  int64(total),
 	}, nil
 }
 

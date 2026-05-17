@@ -68,8 +68,8 @@ type mockSearcher struct {
 	err    error
 }
 
-func (m *mockSearcher) Search(_ context.Context, _ string, _ int) ([]core.Comics, error) {
-	return m.result, m.err
+func (m *mockSearcher) Search(_ context.Context, _ string, _, _ int) ([]core.Comics, int, error) {
+	return m.result, len(m.result), m.err
 }
 func (m *mockSearcher) SearchIndex(_ context.Context, _ string, _ int) ([]core.Comics, error) {
 	return m.result, m.err

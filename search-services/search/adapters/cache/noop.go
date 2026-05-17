@@ -8,6 +8,8 @@ import (
 
 type Noop struct{}
 
-func (Noop) Get(_ context.Context, _ string) ([]core.Comics, bool, error) { return nil, false, nil }
-func (Noop) Set(_ context.Context, _ string, _ []core.Comics) error        { return nil }
-func (Noop) Flush(_ context.Context) error                                 { return nil }
+func (Noop) Get(_ context.Context, _ string) (core.CachedResult, bool, error) {
+	return core.CachedResult{}, false, nil
+}
+func (Noop) Set(_ context.Context, _ string, _ core.CachedResult) error { return nil }
+func (Noop) Flush(_ context.Context) error                               { return nil }

@@ -28,40 +28,41 @@ type dbComic struct {
 	ID      int    `db:"id"`
 	ImgURL  string `db:"img_url"`
 	Matches int    `db:"matches"`
+	Total   int    `db:"total"`
 }
 
-
-func (db *DB) Search(ctx context.Context, keywords []string, limit int) ([]core.Comics, error) {
+func (db *DB) Search(ctx context.Context, keywords []string, limit, offset int) ([]core.Comics, int, error) {
 	query := `
-		SELECT id, img_url,
-			(SELECT count(*) FROM unnest(keywords) k WHERE k = ANY($1)) AS matches
-		FROM comics
-		WHERE keywords && $1
-		ORDER BY matches DESC`
-	var args []any
-	args = append(args, keywords)
-	if limit > 0 {
-		query += ` LIMIT $2`
-		args = append(args, limit)
-	}
-	rows, err := db.conn.QueryxContext(ctx, query, args...)
+		WITH matched AS (
+			SELECT id, img_url,
+				(SELECT count(*) FROM unnest(keywords) k WHERE k = ANY($1)) AS matches
+			FROM comics
+			WHERE keywords && $1
+		)
+		SELECT id, img_url, matches, COUNT(*) OVER() AS total
+		FROM matched
+		ORDER BY matches DESC
+		LIMIT $2 OFFSET $3`
+	rows, err := db.conn.QueryxContext(ctx, query, keywords, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer func() { _ = rows.Close() }()
 
 	var result []core.Comics
+	total := 0
 	for rows.Next() {
 		var row dbComic
 		if err := rows.StructScan(&row); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
+		total = row.Total
 		result = append(result, core.Comics{ID: row.ID, URL: row.ImgURL})
 	}
 	if result == nil {
 		result = []core.Comics{}
 	}
-	return result, rows.Err()
+	return result, total, rows.Err()
 }
 
 func (db *DB) AllComics(ctx context.Context) ([]core.IndexComic, error) {

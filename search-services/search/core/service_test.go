@@ -20,8 +20,8 @@ type mockDB struct {
 	allErr       error
 }
 
-func (m *mockDB) Search(_ context.Context, _ []string, _ int) ([]core.Comics, error) {
-	return m.searchResult, m.searchErr
+func (m *mockDB) Search(_ context.Context, _ []string, _, _ int) ([]core.Comics, int, error) {
+	return m.searchResult, len(m.searchResult), m.searchErr
 }
 func (m *mockDB) AllComics(_ context.Context) ([]core.IndexComic, error) {
 	return m.allComics, m.allErr
@@ -38,16 +38,16 @@ func (m *mockWords) Norm(_ context.Context, _ string) ([]string, error) {
 
 type mockCache struct{}
 
-func (m *mockCache) Get(_ context.Context, _ string) ([]core.Comics, bool, error) {
-	return nil, false, nil
+func (m *mockCache) Get(_ context.Context, _ string) (core.CachedResult, bool, error) {
+	return core.CachedResult{}, false, nil
 }
-func (m *mockCache) Set(_ context.Context, _ string, _ []core.Comics) error { return nil }
+func (m *mockCache) Set(_ context.Context, _ string, _ core.CachedResult) error { return nil }
 func (m *mockCache) Flush(_ context.Context) error                          { return nil }
 
 // Пустые ключевые слова после нормализации — возвращаем пустой результат без запроса к БД
 func TestSearch_EmptyKeywords(t *testing.T) {
 	svc := core.NewService(testLog, &mockDB{}, &mockWords{result: nil}, &mockCache{})
-	result, err := svc.Search(context.Background(), "the an", 10)
+	result, _, err := svc.Search(context.Background(), "the an", 10, 1)
 	require.NoError(t, err)
 	require.Empty(t, result)
 }
@@ -56,7 +56,7 @@ func TestSearch_EmptyKeywords(t *testing.T) {
 func TestSearch_ReturnsDBResults(t *testing.T) {
 	expected := []core.Comics{{ID: 1, URL: "url1"}, {ID: 2, URL: "url2"}}
 	svc := core.NewService(testLog, &mockDB{searchResult: expected}, &mockWords{result: []string{"linux"}}, &mockCache{})
-	result, err := svc.Search(context.Background(), "linux", 10)
+	result, _, err := svc.Search(context.Background(), "linux", 10, 1)
 	require.NoError(t, err)
 	require.Equal(t, expected, result)
 }
@@ -64,14 +64,14 @@ func TestSearch_ReturnsDBResults(t *testing.T) {
 // Ошибка нормализации пробрасывается наружу
 func TestSearch_WordsError(t *testing.T) {
 	svc := core.NewService(testLog, &mockDB{}, &mockWords{err: errors.New("words down")}, &mockCache{})
-	_, err := svc.Search(context.Background(), "linux", 10)
+	_, _, err := svc.Search(context.Background(), "linux", 10, 1)
 	require.Error(t, err)
 }
 
 // Ошибка БД пробрасывается наружу
 func TestSearch_DBError(t *testing.T) {
 	svc := core.NewService(testLog, &mockDB{searchErr: errors.New("db down")}, &mockWords{result: []string{"linux"}}, &mockCache{})
-	_, err := svc.Search(context.Background(), "linux", 10)
+	_, _, err := svc.Search(context.Background(), "linux", 10, 1)
 	require.Error(t, err)
 }
 

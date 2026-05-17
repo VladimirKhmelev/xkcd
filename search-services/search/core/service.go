@@ -28,29 +28,36 @@ func NewService(log *slog.Logger, db DB, words Words, cache Cache) *Service {
 	}
 }
 
-func (s *Service) Search(ctx context.Context, phrase string, limit int) ([]Comics, error) {
+func (s *Service) Search(ctx context.Context, phrase string, limit, page int) ([]Comics, int, error) {
 	keywords, err := s.words.Norm(ctx, phrase)
 	if err != nil {
-		return nil, fmt.Errorf("failed to normalize phrase: %w", err)
+		return nil, 0, fmt.Errorf("failed to normalize phrase: %w", err)
 	}
 	if len(keywords) == 0 {
-		return []Comics{}, nil
+		return []Comics{}, 0, nil
 	}
 
-	cacheKey := fmt.Sprintf("search:%s:%d", phrase, limit)
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+	cacheKey := fmt.Sprintf("search:%s:%d:%d", phrase, limit, page)
 	if cached, ok, err := s.cache.Get(ctx, cacheKey); err == nil && ok {
 		s.log.Debug("cache hit", "key", cacheKey)
-		return cached, nil
+		return cached.Comics, cached.Total, nil
 	}
 
-	comics, err := s.db.Search(ctx, keywords, limit)
+	comics, total, err := s.db.Search(ctx, keywords, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	if err := s.cache.Set(ctx, cacheKey, comics); err != nil {
+	if err := s.cache.Set(ctx, cacheKey, CachedResult{Comics: comics, Total: total}); err != nil {
 		s.log.Warn("cache set failed", "error", err)
 	}
-	return comics, nil
+	return comics, total, nil
 }
 
 func (s *Service) ResetIndex() {

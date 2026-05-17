@@ -10,3 +10,8 @@ type IndexComic struct {
 	URL      string
 	Keywords []string
 }
+
+type CachedResult struct {
+	Comics []Comics
+	Total  int
+}

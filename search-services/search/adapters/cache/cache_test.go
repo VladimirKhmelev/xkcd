@@ -22,17 +22,20 @@ func newTestRedis(t *testing.T) *cache.Redis {
 // Cache miss возвращает false без ошибки
 func TestRedis_GetMiss(t *testing.T) {
 	r := newTestRedis(t)
-	comics, ok, err := r.Get(context.Background(), "missing")
+	result, ok, err := r.Get(context.Background(), "missing")
 
 	require.NoError(t, err)
 	require.False(t, ok)
-	require.Nil(t, comics)
+	require.Nil(t, result.Comics)
 }
 
 // Set и Get возвращают те же данные
 func TestRedis_SetAndGet(t *testing.T) {
 	r := newTestRedis(t)
-	expected := []core.Comics{{ID: 1, URL: "url1"}, {ID: 2, URL: "url2"}}
+	expected := core.CachedResult{
+		Comics: []core.Comics{{ID: 1, URL: "url1"}, {ID: 2, URL: "url2"}},
+		Total:  2,
+	}
 
 	require.NoError(t, r.Set(context.Background(), "key1", expected))
 
@@ -46,9 +49,9 @@ func TestRedis_SetAndGet(t *testing.T) {
 // После Flush ключи недоступны
 func TestRedis_Flush(t *testing.T) {
 	r := newTestRedis(t)
-	comics := []core.Comics{{ID: 1, URL: "url1"}}
+	result := core.CachedResult{Comics: []core.Comics{{ID: 1, URL: "url1"}}, Total: 1}
 
-	require.NoError(t, r.Set(context.Background(), "key1", comics))
+	require.NoError(t, r.Set(context.Background(), "key1", result))
 	require.NoError(t, r.Flush(context.Background()))
 
 	_, ok, err := r.Get(context.Background(), "key1")
@@ -59,13 +62,13 @@ func TestRedis_Flush(t *testing.T) {
 // Set с пустым списком корректно сохраняется и возвращается
 func TestRedis_SetEmpty(t *testing.T) {
 	r := newTestRedis(t)
-	require.NoError(t, r.Set(context.Background(), "empty", []core.Comics{}))
+	require.NoError(t, r.Set(context.Background(), "empty", core.CachedResult{Comics: []core.Comics{}, Total: 0}))
 
 	got, ok, err := r.Get(context.Background(), "empty")
 
 	require.NoError(t, err)
 	require.True(t, ok)
-	require.Empty(t, got)
+	require.Empty(t, got.Comics)
 }
 
 // Noop всегда возвращает cache miss и не падает
@@ -77,8 +80,8 @@ func TestNoop(t *testing.T) {
 
 	require.NoError(t, err)
 	require.False(t, ok)
-	require.Nil(t, got)
+	require.Nil(t, got.Comics)
 
-	require.NoError(t, n.Set(ctx, "key", []core.Comics{{ID: 1}}))
+	require.NoError(t, n.Set(ctx, "key", core.CachedResult{Comics: []core.Comics{{ID: 1}}, Total: 1}))
 	require.NoError(t, n.Flush(ctx))
 }

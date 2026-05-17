@@ -89,7 +89,7 @@ func TestSearch_OK(t *testing.T) {
 		},
 	}
 	c := newClientWith(t, mock)
-	result, err := c.Search(context.Background(), "linux", 10)
+	result, _, err := c.Search(context.Background(), "linux", 10, 1)
 	require.NoError(t, err)
 	require.Len(t, result, 2)
 	require.Equal(t, 1, result[0].ID)
@@ -100,7 +100,7 @@ func TestSearch_OK(t *testing.T) {
 func TestSearch_Empty(t *testing.T) {
 	mock := &mockSearchClient{searchResp: &searchpb.SearchReply{}}
 	c := newClientWith(t, mock)
-	result, err := c.Search(context.Background(), "nothing", 10)
+	result, _, err := c.Search(context.Background(), "nothing", 10, 1)
 	require.NoError(t, err)
 	require.Empty(t, result)
 }
@@ -109,7 +109,7 @@ func TestSearch_Empty(t *testing.T) {
 func TestSearch_Error(t *testing.T) {
 	mock := &mockSearchClient{searchErr: fmt.Errorf("search failed")}
 	c := newClientWith(t, mock)
-	_, err := c.Search(context.Background(), "linux", 10)
+	_, _, err := c.Search(context.Background(), "linux", 10, 1)
 	require.Error(t, err)
 }
 

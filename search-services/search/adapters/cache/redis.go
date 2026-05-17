@@ -24,30 +24,27 @@ func New(address string) (*Redis, error) {
 	return &Redis{client: client}, nil
 }
 
-func (r *Redis) Get(ctx context.Context, key string) ([]core.Comics, bool, error) {
+func (r *Redis) Get(ctx context.Context, key string) (core.CachedResult, bool, error) {
 	data, err := r.client.Get(ctx, key).Bytes()
 	if err == redis.Nil {
-		return nil, false, nil
+		return core.CachedResult{}, false, nil
 	}
-
 	if err != nil {
-		return nil, false, err
+		return core.CachedResult{}, false, err
 	}
 
-	var comics []core.Comics
-	if err := json.Unmarshal(data, &comics); err != nil {
-		return nil, false, err
+	var result core.CachedResult
+	if err := json.Unmarshal(data, &result); err != nil {
+		return core.CachedResult{}, false, err
 	}
-
-	return comics, true, nil
+	return result, true, nil
 }
 
-func (r *Redis) Set(ctx context.Context, key string, comics []core.Comics) error {
-	data, err := json.Marshal(comics)
+func (r *Redis) Set(ctx context.Context, key string, result core.CachedResult) error {
+	data, err := json.Marshal(result)
 	if err != nil {
 		return err
 	}
-
 	return r.client.Set(ctx, key, data, ttl).Err()
 }
 

@@ -26,6 +26,7 @@ type SearchRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Phrase        string                 `protobuf:"bytes,1,opt,name=phrase,proto3" json:"phrase,omitempty"`
 	Limit         int64                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	Page          int64                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -70,6 +71,13 @@ func (x *SearchRequest) GetPhrase() string {
 func (x *SearchRequest) GetLimit() int64 {
 	if x != nil {
 		return x.Limit
+	}
+	return 0
+}
+
+func (x *SearchRequest) GetPage() int64 {
+	if x != nil {
+		return x.Page
 	}
 	return 0
 }
@@ -182,10 +190,11 @@ var File_proto_search_search_proto protoreflect.FileDescriptor
 
 const file_proto_search_search_proto_rawDesc = "" +
 	"\n" +
-	"\x19proto/search/search.proto\x12\x06search\x1a\x1bgoogle/protobuf/empty.proto\"=\n" +
+	"\x19proto/search/search.proto\x12\x06search\x1a\x1bgoogle/protobuf/empty.proto\"Q\n" +
 	"\rSearchRequest\x12\x16\n" +
 	"\x06phrase\x18\x01 \x01(\tR\x06phrase\x12\x14\n" +
-	"\x05limit\x18\x02 \x01(\x03R\x05limit\"*\n" +
+	"\x05limit\x18\x02 \x01(\x03R\x05limit\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x03R\x04page\"*\n" +
 	"\x06Comics\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x10\n" +
 	"\x03url\x18\x02 \x01(\tR\x03url\"K\n" +

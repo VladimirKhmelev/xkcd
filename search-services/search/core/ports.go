@@ -3,7 +3,7 @@ package core
 import "context"
 
 type Searcher interface {
-	Search(ctx context.Context, phrase string, limit int) ([]Comics, error)
+	Search(ctx context.Context, phrase string, limit, page int) ([]Comics, int, error)
 	ISearch(ctx context.Context, phrase string, limit int) ([]Comics, error)
 }
 
@@ -16,7 +16,7 @@ type IndexResetter interface {
 }
 
 type DB interface {
-	Search(ctx context.Context, keywords []string, limit int) ([]Comics, error)
+	Search(ctx context.Context, keywords []string, limit, offset int) ([]Comics, int, error)
 	AllComics(ctx context.Context) ([]IndexComic, error)
 }
 
@@ -25,8 +25,8 @@ type Words interface {
 }
 
 type Cache interface {
-	Get(ctx context.Context, key string) ([]Comics, bool, error)
-	Set(ctx context.Context, key string, comics []Comics) error
+	Get(ctx context.Context, key string) (CachedResult, bool, error)
+	Set(ctx context.Context, key string, result CachedResult) error
 	Flush(ctx context.Context) error
 }
 

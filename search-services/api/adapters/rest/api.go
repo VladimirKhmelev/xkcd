@@ -204,27 +204,17 @@ func NewSearchHandler(log *slog.Logger, searcher core.Searcher) http.HandlerFunc
 			return
 		}
 
-		all, err := searcher.Search(r.Context(), phrase, 0)
+		comics, total, err := searcher.Search(r.Context(), phrase, limit, page)
 		if err != nil {
 			log.Error("search failed", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		total := len(all)
 		pages := (total + limit - 1) / limit
 		if pages == 0 {
 			pages = 1
 		}
-		offset := (page - 1) * limit
-		if offset > total {
-			offset = total
-		}
-		end := offset + limit
-		if end > total {
-			end = total
-		}
-		comics := all[offset:end]
 
 		type comicsItem struct {
 			ID  int    `json:"id"`
