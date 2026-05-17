@@ -6,3 +6,11 @@ scrape_configs:
   - job_name: "api"
     static_configs:
       - targets: ["api:8080"]
+
+  - job_name: "search"
+    static_configs:
+      - targets: ["search:9090"]
+
+  - job_name: "update"
+    static_configs:
+      - targets: ["update:9090"]

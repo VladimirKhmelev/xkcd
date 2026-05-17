@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 
+	"github.com/VictoriaMetrics/metrics"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	searchpb "yadro.com/course/proto/search"
 	"yadro.com/course/pkg/tracing"
+	searchpb "yadro.com/course/proto/search"
 	"yadro.com/course/search/adapters/broker"
 	"yadro.com/course/search/adapters/cache"
 	"yadro.com/course/search/adapters/db"
@@ -101,6 +103,17 @@ func run(cfg config.Config, log *slog.Logger) error {
 		<-ctx.Done()
 		log.Debug("shutting down server")
 		s.GracefulStop()
+	}()
+
+	go func() {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+			metrics.WritePrometheus(w, true)
+		})
+		log.Info("running metrics server", "address", cfg.MetricsAddress)
+		if err := http.ListenAndServe(cfg.MetricsAddress, mux); err != nil {
+			log.Error("metrics server failed", "error", err)
+		}
 	}()
 
 	log.Info("running gRPC server", "address", cfg.Address)

@@ -9,14 +9,15 @@ import (
 )
 
 type Config struct {
-	LogLevel      string        `yaml:"log_level"      env:"LOG_LEVEL"       env-default:"DEBUG"`
-	Address       string        `yaml:"search_address" env:"SEARCH_ADDRESS"  env-default:"localhost:83"`
-	DBAddress     string        `yaml:"db_address"     env:"DB_ADDRESS"      env-default:"localhost:5432"`
-	WordsAddress  string        `yaml:"words_address"  env:"WORDS_ADDRESS"   env-default:"localhost:81"`
-	IndexTTL      time.Duration `yaml:"index_ttl"      env:"INDEX_TTL"       env-default:"5m"`
-	BrokerAddress string        `yaml:"broker_address" env:"BROKER_ADDRESS"  env-default:"nats://localhost:4222"`
-	RedisAddress  string        `yaml:"redis_address"  env:"REDIS_ADDRESS"   env-default:"localhost:6379"`
-	OTLPEndpoint  string        `yaml:"otlp_endpoint"  env:"OTLP_ENDPOINT"   env-default:""`
+	LogLevel       string        `yaml:"log_level"       env:"LOG_LEVEL"        env-default:"DEBUG"`
+	Address        string        `yaml:"search_address"  env:"SEARCH_ADDRESS"   env-default:"localhost:83"`
+	MetricsAddress string        `yaml:"metrics_address" env:"METRICS_ADDRESS"  env-default:":9090"`
+	DBAddress      string        `yaml:"db_address"      env:"DB_ADDRESS"       env-default:"localhost:5432"`
+	WordsAddress   string        `yaml:"words_address"   env:"WORDS_ADDRESS"    env-default:"localhost:81"`
+	IndexTTL       time.Duration `yaml:"index_ttl"       env:"INDEX_TTL"        env-default:"5m"`
+	BrokerAddress  string        `yaml:"broker_address"  env:"BROKER_ADDRESS"   env-default:"nats://localhost:4222"`
+	RedisAddress   string        `yaml:"redis_address"   env:"REDIS_ADDRESS"    env-default:"localhost:6379"`
+	OTLPEndpoint   string        `yaml:"otlp_endpoint"   env:"OTLP_ENDPOINT"    env-default:""`
 }
 
 func MustLoad(configPath string) Config {

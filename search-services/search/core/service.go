@@ -6,7 +6,27 @@ import (
 	"log/slog"
 	"sort"
 	"sync"
+	"sync/atomic"
+
+	"github.com/VictoriaMetrics/metrics"
 )
+
+var (
+	searchCacheHits   = metrics.NewCounter(`search_cache_hits_total`)
+	searchCacheMisses = metrics.NewCounter(`search_cache_misses_total`)
+	searchQueriesDB   = metrics.NewCounter(`search_queries_total{type="db"}`)
+	searchQueriesIdx  = metrics.NewCounter(`search_queries_total{type="index"}`)
+	searchErrorsWords = metrics.NewCounter(`search_errors_total{type="words"}`)
+	searchErrorsDB    = metrics.NewCounter(`search_errors_total{type="db"}`)
+
+	indexKeywordsTotal atomic.Int64
+)
+
+func init() {
+	metrics.NewGauge(`index_keywords_total`, func() float64 {
+		return float64(indexKeywordsTotal.Load())
+	})
+}
 
 type Service struct {
 	log   *slog.Logger
@@ -47,13 +67,18 @@ func (s *Service) Search(ctx context.Context, phrase string, limit, page int) ([
 	cacheKey := fmt.Sprintf("search:%s:%d:%d", phrase, limit, page)
 	if cached, ok, err := s.cache.Get(ctx, cacheKey); err == nil && ok {
 		s.log.Debug("cache hit", "key", cacheKey)
+		searchCacheHits.Inc()
+		searchQueriesDB.Inc()
 		return cached.Comics, cached.Total, nil
 	}
+	searchCacheMisses.Inc()
 
 	comics, total, err := s.db.Search(ctx, keywords, limit, offset)
 	if err != nil {
+		searchErrorsDB.Inc()
 		return nil, 0, err
 	}
+	searchQueriesDB.Inc()
 	if err := s.cache.Set(ctx, cacheKey, CachedResult{Comics: comics, Total: total}); err != nil {
 		s.log.Warn("cache set failed", "error", err)
 	}
@@ -64,6 +89,7 @@ func (s *Service) ResetIndex() {
 	s.mu.Lock()
 	s.index = make(map[string][]Comics)
 	s.mu.Unlock()
+	indexKeywordsTotal.Store(0)
 	if err := s.cache.Flush(context.Background()); err != nil {
 		s.log.Warn("cache flush failed", "error", err)
 	}
@@ -85,6 +111,7 @@ func (s *Service) BuildIndex(ctx context.Context) error {
 	s.mu.Lock()
 	s.index = newIndex
 	s.mu.Unlock()
+	indexKeywordsTotal.Store(int64(len(newIndex)))
 	s.log.Info("index built", "keywords", len(newIndex))
 	return nil
 }
@@ -92,11 +119,13 @@ func (s *Service) BuildIndex(ctx context.Context) error {
 func (s *Service) ISearch(ctx context.Context, phrase string, limit int) ([]Comics, error) {
 	keywords, err := s.words.Norm(ctx, phrase)
 	if err != nil {
+		searchErrorsWords.Inc()
 		return nil, fmt.Errorf("failed to normalize phrase: %w", err)
 	}
 	if len(keywords) == 0 {
 		return []Comics{}, nil
 	}
+	searchQueriesIdx.Inc()
 
 	s.mu.RLock()
 	counts := make(map[int]int)
