@@ -7,10 +7,10 @@ import (
 )
 
 func Rate(next http.HandlerFunc, rps int) http.HandlerFunc {
-	limiter := rate.NewLimiter(rate.Limit(rps), 1)
+	limiter := rate.NewLimiter(rate.Limit(rps), rps)
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := limiter.Wait(r.Context()); err != nil {
-			http.Error(w, "service unavailable", http.StatusServiceUnavailable)
+		if !limiter.Allow() {
+			http.Error(w, "too many requests", http.StatusTooManyRequests)
 			return
 		}
 		next(w, r)

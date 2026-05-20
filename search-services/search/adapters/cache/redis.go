@@ -49,5 +49,20 @@ func (r *Redis) Set(ctx context.Context, key string, result core.CachedResult) e
 }
 
 func (r *Redis) Flush(ctx context.Context) error {
-	return r.client.FlushDB(ctx).Err()
+	var c uint64
+	for {
+		keys, next, err := r.client.Scan(ctx, c, "search:*", 100).Result()
+		if err != nil {
+			return err
+		}
+		if len(keys) > 0 {
+			if err := r.client.Unlink(ctx, keys...).Err(); err != nil {
+				return err
+			}
+		}
+		c = next
+		if c == 0 {
+			return nil
+		}
+	}
 }

@@ -45,8 +45,11 @@ type UserRegistrar interface {
 	CreateUser(ctx context.Context, username, password string) error
 }
 
+const maxBodyBytes = 1 << 20 // 1 MB
+
 func NewRegisterHandler(log *slog.Logger, storage UserRegistrar) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
 		var req struct {
 			Name     string `json:"name"`
 			Password string `json:"password"`
@@ -70,6 +73,7 @@ func NewRegisterHandler(log *slog.Logger, storage UserRegistrar) http.HandlerFun
 
 func NewUserLoginHandler(log *slog.Logger, auth Authenticator, checker UserChecker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
 		var req struct {
 			Name     string `json:"name"`
 			Password string `json:"password"`
@@ -95,6 +99,7 @@ func NewUserLoginHandler(log *slog.Logger, auth Authenticator, checker UserCheck
 
 func NewLoginHandler(log *slog.Logger, auth Authenticator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
 		var req struct {
 			Name     string `json:"name"`
 			Password string `json:"password"`

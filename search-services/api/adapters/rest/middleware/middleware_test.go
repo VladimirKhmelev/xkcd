@@ -160,3 +160,12 @@ func TestRate_PassesStatusThrough(t *testing.T) {
 	h(w, httptest.NewRequest(http.MethodGet, "/", nil))
 	require.Equal(t, http.StatusCreated, w.Code)
 }
+
+/* При превышении лимита запрос получает 429 */
+func TestRate_RejectsOverLimit(t *testing.T) {
+	h := middleware.Rate(okHandler(), 1)
+	h(recorder(), httptest.NewRequest(http.MethodGet, "/", nil))
+	w := recorder()
+	h(w, httptest.NewRequest(http.MethodGet, "/", nil))
+	require.Equal(t, http.StatusTooManyRequests, w.Code)
+}

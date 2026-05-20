@@ -46,15 +46,15 @@ func TestRedis_SetAndGet(t *testing.T) {
 	require.Equal(t, expected, got)
 }
 
-// После Flush ключи недоступны
+// После Flush ключи с префиксом search: недоступны
 func TestRedis_Flush(t *testing.T) {
 	r := newTestRedis(t)
 	result := core.CachedResult{Comics: []core.Comics{{ID: 1, URL: "url1"}}, Total: 1}
 
-	require.NoError(t, r.Set(context.Background(), "key1", result))
+	require.NoError(t, r.Set(context.Background(), "search:linux:10:1", result))
 	require.NoError(t, r.Flush(context.Background()))
 
-	_, ok, err := r.Get(context.Background(), "key1")
+	_, ok, err := r.Get(context.Background(), "search:linux:10:1")
 	require.NoError(t, err)
 	require.False(t, ok)
 }
