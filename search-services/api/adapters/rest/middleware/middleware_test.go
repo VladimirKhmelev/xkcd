@@ -1,6 +1,7 @@
 package middleware_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -161,11 +162,12 @@ func TestRate_PassesStatusThrough(t *testing.T) {
 	require.Equal(t, http.StatusCreated, w.Code)
 }
 
-/* При превышении лимита запрос получает 429 */
-func TestRate_RejectsOverLimit(t *testing.T) {
+/* Отменённый контекст вызывает 429 */
+func TestRate_RejectsOnCancelledContext(t *testing.T) {
 	h := middleware.Rate(okHandler(), 1)
-	h(recorder(), httptest.NewRequest(http.MethodGet, "/", nil))
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
 	w := recorder()
-	h(w, httptest.NewRequest(http.MethodGet, "/", nil))
+	h(w, httptest.NewRequestWithContext(ctx, http.MethodGet, "/", nil))
 	require.Equal(t, http.StatusTooManyRequests, w.Code)
 }

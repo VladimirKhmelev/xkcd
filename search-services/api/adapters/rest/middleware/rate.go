@@ -7,9 +7,9 @@ import (
 )
 
 func Rate(next http.HandlerFunc, rps int) http.HandlerFunc {
-	limiter := rate.NewLimiter(rate.Limit(rps), rps)
+	limiter := rate.NewLimiter(rate.Limit(rps), 1)
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !limiter.Allow() {
+		if err := limiter.Wait(r.Context()); err != nil {
 			http.Error(w, "too many requests", http.StatusTooManyRequests)
 			return
 		}
