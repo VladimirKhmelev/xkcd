@@ -59,7 +59,7 @@
 				
 				<option value="file1">yadro.com/course/api/adapters/db/db.go (0.0%)</option>
 				
-				<option value="file2">yadro.com/course/api/adapters/rest/api.go (75.7%)</option>
+				<option value="file2">yadro.com/course/api/adapters/rest/api.go (76.2%)</option>
 				
 				<option value="file3">yadro.com/course/api/adapters/rest/middleware/auth.go (100.0%)</option>
 				
@@ -67,7 +67,7 @@
 				
 				<option value="file5">yadro.com/course/api/adapters/rest/middleware/metric.go (100.0%)</option>
 				
-				<option value="file6">yadro.com/course/api/adapters/rest/middleware/rate.go (66.7%)</option>
+				<option value="file6">yadro.com/course/api/adapters/rest/middleware/rate.go (100.0%)</option>
 				
 				<option value="file7">yadro.com/course/api/adapters/rest/swagger_docs.go (0.0%)</option>
 				
@@ -91,7 +91,7 @@
 				
 				<option value="file17">yadro.com/course/search/adapters/cache/noop.go (100.0%)</option>
 				
-				<option value="file18">yadro.com/course/search/adapters/cache/redis.go (77.8%)</option>
+				<option value="file18">yadro.com/course/search/adapters/cache/redis.go (78.6%)</option>
 				
 				<option value="file19">yadro.com/course/search/adapters/db/storage.go (0.0%)</option>
 				
@@ -375,8 +375,11 @@ type UserRegistrar interface {
         CreateUser(ctx context.Context, username, password string) error
 }
 
+const maxBodyBytes = 1 &lt;&lt; 20 // 1 MB
+
 func NewRegisterHandler(log *slog.Logger, storage UserRegistrar) http.HandlerFunc <span class="cov6" title="3">{
         return func(w http.ResponseWriter, r *http.Request) </span><span class="cov6" title="3">{
+                r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
                 var req struct {
                         Name     string `json:"name"`
                         Password string `json:"password"`
@@ -400,6 +403,7 @@ func NewRegisterHandler(log *slog.Logger, storage UserRegistrar) http.HandlerFun
 
 func NewUserLoginHandler(log *slog.Logger, auth Authenticator, checker UserChecker) http.HandlerFunc <span class="cov4" title="2">{
         return func(w http.ResponseWriter, r *http.Request) </span><span class="cov4" title="2">{
+                r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
                 var req struct {
                         Name     string `json:"name"`
                         Password string `json:"password"`
@@ -425,6 +429,7 @@ func NewUserLoginHandler(log *slog.Logger, auth Authenticator, checker UserCheck
 
 func NewLoginHandler(log *slog.Logger, auth Authenticator) http.HandlerFunc <span class="cov6" title="3">{
         return func(w http.ResponseWriter, r *http.Request) </span><span class="cov6" title="3">{
+                r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
                 var req struct {
                         Name     string `json:"name"`
                         Password string `json:"password"`
@@ -707,14 +712,14 @@ import (
         "golang.org/x/time/rate"
 )
 
-func Rate(next http.HandlerFunc, rps int) http.HandlerFunc <span class="cov10" title="2">{
+func Rate(next http.HandlerFunc, rps int) http.HandlerFunc <span class="cov10" title="3">{
         limiter := rate.NewLimiter(rate.Limit(rps), 1)
-        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov10" title="2">{
-                if err := limiter.Wait(r.Context()); err != nil </span><span class="cov0" title="0">{
-                        http.Error(w, "service unavailable", http.StatusServiceUnavailable)
+        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov10" title="3">{
+                if err := limiter.Wait(r.Context()); err != nil </span><span class="cov1" title="1">{
+                        http.Error(w, "too many requests", http.StatusTooManyRequests)
                         return
                 }</span>
-                <span class="cov10" title="2">next(w, r)</span>
+                <span class="cov6" title="2">next(w, r)</span>
         }
 }
 </pre>
@@ -1803,8 +1808,23 @@ func (r *Redis) Set(ctx context.Context, key string, result core.CachedResult) e
 }
 
 func (r *Redis) Flush(ctx context.Context) error <span class="cov1" title="1">{
-        return r.client.FlushDB(ctx).Err()
-}</span>
+        var c uint64
+        for </span><span class="cov1" title="1">{
+                keys, next, err := r.client.Scan(ctx, c, "search:*", 100).Result()
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov1" title="1">if len(keys) &gt; 0 </span><span class="cov1" title="1">{
+                        if err := r.client.Unlink(ctx, keys...).Err(); err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                }
+                <span class="cov1" title="1">c = next
+                if c == 0 </span><span class="cov1" title="1">{
+                        return nil
+                }</span>
+        }
+}
 </pre>
 		
 		<pre class="file" id="file19" style="display: none">package db
