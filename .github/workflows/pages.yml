@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download coverage report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: coverage-report
           run-id: ${{ github.event.workflow_run.id }}
@@ -25,7 +25,7 @@ jobs:
           path: public/coverage
 
       - name: Download swagger docs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: swagger-docs
           run-id: ${{ github.event.workflow_run.id }}
